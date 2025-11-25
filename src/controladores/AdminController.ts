@@ -7,7 +7,7 @@ import { UsuarioService } from "../servicios/UsuarioService";
 const AdminRouter = Router();
 
 // Define tu clave secreta de forma segura (¡Usar variable de entorno en producción!)
-const JWT_SECRET = process.env.JWT_SECRET || "tu_clave_super_secreta_aqui";
+const JWT_SECRET = process.env.JWT_SECRET || "1234";
 
 /**
  * POST /api/admin/login

@@ -6,11 +6,14 @@
     "outDir": "./dist",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "strict": true, // Este es el que requiere el '!'
+    "strict": true,
     "skipLibCheck": true,
     "emitDecoratorMetadata": true, // Requerido por TypeORM
     "experimentalDecorators": true, // Requerido por TypeORM
     "moduleResolution": "node",
     "resolveJsonModule": true
-  }
+    
+ },
+  "exclude": ["node_modules", "adventure-bus"] 
+
 }

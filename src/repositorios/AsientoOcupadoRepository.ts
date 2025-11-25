@@ -1,24 +1,39 @@
-package com.adventurebus.repository;
+// src/repositorios/AsientoOcupadoRepository.ts
 
-import com.adventurebus.model.AsientoOcupado;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import { Repository, DeleteResult } from "typeorm";
+import { AppDataSource } from "../database/data-source";
+import { AsientoOcupado } from "../modulos/AsientoOcupado.entity";
+import { Reserva } from "../modulos/Reserva.entity";
 
-import java.time.LocalDate;
-import java.util.List;
+const AsientoRepo: Repository<AsientoOcupado> = AppDataSource.getRepository(AsientoOcupado);
 
-@Repository
-public interface AsientoOcupadoRepository extends JpaRepository<AsientoOcupado, Long> {
+export class AsientoOcupadoRepository {
 
     /**
-     * Elimina el registro de asiento ocupado asociado a una reserva cancelada.
-     * Esto libera el asiento.
+     * Guarda un registro de asiento ocupado.
      */
-    void deleteByReservaId(Long reservaId);
+    static async save(asiento: AsientoOcupado): Promise<AsientoOcupado> {
+        return AsientoRepo.save(asiento);
+    }
 
     /**
      * Obtiene todos los asientos ocupados para un bus y fecha específicos.
-     * @return Lista de AsientoOcupado.
      */
-    List<AsientoOcupado> findByBusIdAndFechaViaje(Long busId, LocalDate fechaViaje);
+    static async findByBusAndDate(busId: number, fechaViaje: Date): Promise<AsientoOcupado[]> {
+        return AsientoRepo.find({
+            where: {
+                bus: { id: busId },
+                fechaViaje: fechaViaje
+            },
+            select: ["numeroAsiento"] // Solo necesitamos el número de asiento
+        });
+    }
+
+    /**
+     * Libera un asiento al eliminar el registro asociado a una reserva.
+     */
+    static async deleteByReservaId(reservaId: number): Promise<DeleteResult> {
+        // En TypeORM, si la relación está bien definida, podemos usar el objeto
+        return AsientoRepo.delete({ reserva: { id: reservaId } });
+    }
 }

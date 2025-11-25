@@ -4,7 +4,7 @@ import { Request, Response, NextFunction } from 'express';
 import * as jwt from 'jsonwebtoken';
 
 // Define tu clave secreta de forma segura (debe ser la misma que en AdminController)
-const JWT_SECRET = process.env.JWT_SECRET || "tu_clave_super_secreta_aqui";
+const JWT_SECRET = process.env.JWT_SECRET || "t123456";
 
 export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
     // 1. Obtener el encabezado de autorización

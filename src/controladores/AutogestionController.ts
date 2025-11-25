@@ -1,13 +1,13 @@
-// src/controladores/AutogestionController.ts
-
 import { Request, Response, Router } from "express";
 import { ReservaService } from "../servicios/ReservaService";
 
+// Creamos un nuevo router específico para la autogestión
 const AutogestionRouter = Router();
 
 /**
  * POST /api/autogestion/buscar
- * Busca una reserva por código y correo electrónico (image_4b23db.png).
+ * Busca una reserva por código y correo electrónico, y devuelve los detalles.
+ * * Body esperado: { "codigoReserva": "CRS-123456", "correoElectronico": "pasajero@mail.com" }
  */
 AutogestionRouter.post('/buscar', async (req: Request, res: Response) => {
     const { codigoReserva, correoElectronico } = req.body;
@@ -17,36 +17,41 @@ AutogestionRouter.post('/buscar', async (req: Request, res: Response) => {
     }
 
     try {
+        // Llama a la función de servicio que verifica la existencia, estado y pertenencia.
         const reserva = await ReservaService.findReservaForAutogestion(
             codigoReserva,
             correoElectronico
         );
 
         if (!reserva) {
-            return res.status(404).json({ message: "Reserva no encontrada o datos incorrectos." });
+            // Se usa 404 para datos incorrectos o no encontrados, por seguridad.
+            return res.status(404).json({ message: "Reserva no encontrada o datos de verificación incorrectos." });
         }
 
-        // Se retorna la reserva (con detalles del bus y pasajero)
+        // Retornamos la reserva completa (incluyendo detalles de Bus y Pasajero gracias a las relaciones)
         return res.status(200).json(reserva);
 
     } catch (error) {
-        console.error("Error in autogestion search:", error);
+        console.error("Error en la búsqueda de autogestión:", error);
         return res.status(500).json({ message: "Error interno al buscar la reserva." });
     }
 });
 
 /**
- * POST /api/autogestion/cancelar/:id
- * Cancela una reserva existente.
+ * DELETE /api/autogestion/cancelar/:id
+ * Cancela una reserva existente usando su ID interno. 
+ * Este ID se obtiene primero con el endpoint /buscar.
  */
-AutogestionRouter.post('/cancelar/:id', async (req: Request, res: Response) => {
+AutogestionRouter.delete('/cancelar/:id', async (req: Request, res: Response) => {
     try {
-        const reservaId = parseInt(req.params.id);
+        // Aseguramos que el ID sea un número entero
+        const reservaId = parseInt(req.params.id, 10);
         
         if (isNaN(reservaId)) {
             return res.status(400).json({ message: "ID de reserva inválido." });
         }
 
+        // Llama al servicio para ejecutar la lógica de cancelación (marcar CANCELADA, liberar asiento)
         const cancelledReserva = await ReservaService.cancelReserva(reservaId);
         
         return res.status(200).json({ 
@@ -55,11 +60,19 @@ AutogestionRouter.post('/cancelar/:id', async (req: Request, res: Response) => {
         });
 
     } catch (error: any) {
+        // --- CAMBIO IMPORTANTE: Manejo de Errores con Códigos HTTP correctos ---
         if (error.message.includes("not found")) {
-            return res.status(404).json({ message: error.message });
+            // Si el servicio no encuentra la reserva
+            return res.status(404).json({ message: "La reserva a cancelar no fue encontrada." });
         }
-        console.error("Error cancelling reservation:", error);
+        if (error.message.includes("already cancelled")) {
+            // Si la reserva ya estaba cancelada (mal estado)
+            return res.status(400).json({ message: "Esta reserva ya había sido cancelada previamente." });
+        }
+        
+        console.error("Error al cancelar la reserva:", error);
         return res.status(500).json({ message: "Error interno al cancelar la reserva." });
+        // ------------------------------------------------------------------------
     }
 });
 

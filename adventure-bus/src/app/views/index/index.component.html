@@ -1,0 +1,90 @@
+<div class="main-container">
+    
+    <!-- Encabezado de la página -->
+    <header class="header">
+        <div class="logo">Adventure Bus</div>
+        <nav class="nav-links">
+            <a href="/login" class="nav-link">Iniciar Sesión</a>
+            <a href="/admin-login" class="nav-link admin-link">Admin</a>
+        </nav>
+    </header>
+
+    <!-- Sección Principal de Búsqueda -->
+    <section class="hero-section">
+        <div class="hero-content">
+            <h1 class="hero-title">¡Viaja seguro y cómodo por Perú!</h1>
+            <p class="hero-subtitle">Encuentra tus boletos de bus al mejor precio.</p>
+
+            <!-- Tarjeta del Formulario de Búsqueda -->
+            <div class="search-card">
+                <!-- Usamos el Form Group definido en el TS -->
+                <form [formGroup]="searchForm" (ngSubmit)="onSubmit()">
+                    <div class="form-grid">
+                        
+                        <!-- Origen -->
+                        <div class="form-group">
+                            <label for="origin"><i class="fas fa-map-marker-alt"></i> Origen</label>
+                            <select id="origin" formControlName="origin" class="form-select">
+                                <option value="" disabled>Selecciona Origen</option>
+                                @for (dest of destinations; track dest.id) {
+                                    <option [value]="dest.name">{{ dest.name }}</option>
+                                }
+                            </select>
+                            <!-- CORRECCIÓN CLAVE: @if sin comillas y usando get('control') -->
+                            @if (searchForm.get('origin')?.invalid && searchForm.get('origin')?.touched) {
+                                <div class="error-message">
+                                    El origen es obligatorio.
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Destino -->
+                        <div class="form-group">
+                            <label for="destination"><i class="fas fa-map-pin"></i> Destino</label>
+                            <select id="destination" formControlName="destination" class="form-select">
+                                <option value="" disabled>Selecciona Destino</option>
+                                @for (dest of destinations; track dest.id) {
+                                    <option [value]="dest.name">{{ dest.name }}</option>
+                                }
+                            </select>
+                            <!-- CORRECCIÓN CLAVE: @if sin comillas y usando get('control') -->
+                            @if (searchForm.get('destination')?.invalid && searchForm.get('destination')?.touched) {
+                                <div class="error-message">
+                                    El destino es obligatorio.
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Fecha -->
+                        <div class="form-group">
+                            <label for="date"><i class="fas fa-calendar-alt"></i> Fecha</label>
+                            <input id="date" type="date" formControlName="date" class="form-input">
+                            <!-- CORRECCIÓN CLAVE: @if sin comillas y usando get('control') -->
+                            @if (searchForm.get('date')?.invalid && searchForm.get('date')?.touched) {
+                                <div class="error-message">
+                                    La fecha es obligatoria.
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Pasajeros -->
+                        <div class="form-group">
+                            <label for="passengers"><i class="fas fa-users"></i> Pasajeros</label>
+                            <input id="passengers" type="number" formControlName="passengers" min="1" max="10" class="form-input">
+                            <!-- CORRECCIÓN CLAVE: @if sin comillas y usando get('control') -->
+                            @if (searchForm.get('passengers')?.invalid && searchForm.get('passengers')?.touched) {
+                                <div class="error-message">
+                                    Mínimo 1 y Máximo 10 pasajeros.
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-search" [disabled]="searchForm.invalid">
+                        <i class="fas fa-search"></i> Buscar Buses
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+</div>

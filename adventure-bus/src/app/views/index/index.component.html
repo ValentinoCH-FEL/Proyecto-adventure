@@ -1,90 +1,94 @@
-<div class="main-container">
-    
-    <!-- Encabezado de la página -->
-    <header class="header">
-        <div class="logo">Adventure Bus</div>
-        <nav class="nav-links">
-            <a href="/login" class="nav-link">Iniciar Sesión</a>
-            <a href="/admin-login" class="nav-link admin-link">Admin</a>
-        </nav>
-    </header>
+<header class="header">
+  <nav class="navbar">
+    <div class="logo">Adventure</div>
+    <ul class="menu">
+      <li>
+        <a routerLink="/autogestion" class="btn-menu">Autogestión</a>
+      </li>
+      <li>
+        <a routerLink="/contacto" class="btn-menu">Contacto</a>
+      </li>
+      <li>
+        <select (change)="cambiarIdioma($event)">
+          <option value="es">🇪🇸 ES</option>
+          <option value="en">🇬🇧 EN</option>
+          <option value="pt">🇧🇷 PT</option>
+        </select>
+      </li>
+      <li>
+        <a routerLink="/admin-login" class="btn-menu">Admin</a>
+      </li>
+    </ul>
+  </nav>
 
-    <!-- Sección Principal de Búsqueda -->
-    <section class="hero-section">
-        <div class="hero-content">
-            <h1 class="hero-title">¡Viaja seguro y cómodo por Perú!</h1>
-            <p class="hero-subtitle">Encuentra tus boletos de bus al mejor precio.</p>
+  <div class="buscador">
+    <form (ngSubmit)="buscarViaje()" class="form-busqueda">
+      <div class="campo">
+        <label>Origen</label>
+        <input type="text" name="origen" placeholder="Buscar Origen" [(ngModel)]="busqueda.origen" required>
+      </div>
 
-            <!-- Tarjeta del Formulario de Búsqueda -->
-            <div class="search-card">
-                <!-- Usamos el Form Group definido en el TS -->
-                <form [formGroup]="searchForm" (ngSubmit)="onSubmit()">
-                    <div class="form-grid">
-                        
-                        <!-- Origen -->
-                        <div class="form-group">
-                            <label for="origin"><i class="fas fa-map-marker-alt"></i> Origen</label>
-                            <select id="origin" formControlName="origin" class="form-select">
-                                <option value="" disabled>Selecciona Origen</option>
-                                @for (dest of destinations; track dest.id) {
-                                    <option [value]="dest.name">{{ dest.name }}</option>
-                                }
-                            </select>
-                            <!-- CORRECCIÓN CLAVE: @if sin comillas y usando get('control') -->
-                            @if (searchForm.get('origin')?.invalid && searchForm.get('origin')?.touched) {
-                                <div class="error-message">
-                                    El origen es obligatorio.
-                                </div>
-                            }
-                        </div>
+      <div class="icono">⇄</div>
 
-                        <!-- Destino -->
-                        <div class="form-group">
-                            <label for="destination"><i class="fas fa-map-pin"></i> Destino</label>
-                            <select id="destination" formControlName="destination" class="form-select">
-                                <option value="" disabled>Selecciona Destino</option>
-                                @for (dest of destinations; track dest.id) {
-                                    <option [value]="dest.name">{{ dest.name }}</option>
-                                }
-                            </select>
-                            <!-- CORRECCIÓN CLAVE: @if sin comillas y usando get('control') -->
-                            @if (searchForm.get('destination')?.invalid && searchForm.get('destination')?.touched) {
-                                <div class="error-message">
-                                    El destino es obligatorio.
-                                </div>
-                            }
-                        </div>
+      <div class="campo">
+        <label>Destino</label>
+        <input type="text" name="destino" placeholder="Buscar Destino" [(ngModel)]="busqueda.destino" required>
+      </div>
 
-                        <!-- Fecha -->
-                        <div class="form-group">
-                            <label for="date"><i class="fas fa-calendar-alt"></i> Fecha</label>
-                            <input id="date" type="date" formControlName="date" class="form-input">
-                            <!-- CORRECCIÓN CLAVE: @if sin comillas y usando get('control') -->
-                            @if (searchForm.get('date')?.invalid && searchForm.get('date')?.touched) {
-                                <div class="error-message">
-                                    La fecha es obligatoria.
-                                </div>
-                            }
-                        </div>
-
-                        <!-- Pasajeros -->
-                        <div class="form-group">
-                            <label for="passengers"><i class="fas fa-users"></i> Pasajeros</label>
-                            <input id="passengers" type="number" formControlName="passengers" min="1" max="10" class="form-input">
-                            <!-- CORRECCIÓN CLAVE: @if sin comillas y usando get('control') -->
-                            @if (searchForm.get('passengers')?.invalid && searchForm.get('passengers')?.touched) {
-                                <div class="error-message">
-                                    Mínimo 1 y Máximo 10 pasajeros.
-                                </div>
-                            }
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn-search" [disabled]="searchForm.invalid">
-                        <i class="fas fa-search"></i> Buscar Buses
-                    </button>
-                </form>
-            </div>
+      <div class="campo fecha">
+        <label>¿Cuándo viajas?</label>
+        <div class="opciones-fecha">
+          <button type="button" (click)="seleccionarHoy()">Hoy</button>
+          <button type="button" (click)="seleccionarManana()">Mañana</button>
+          <input type="date" name="fecha" [(ngModel)]="busqueda.fecha" required>
         </div>
-    </section>
-</div>
+      </div>
+
+      <button type="submit" class="btn-buscar">
+        🔍 Buscar
+      </button>
+    </form>
+  </div>
+</header>
+
+<main>
+  <section class="carrusel">
+    <input type="radio" name="radio-btn" id="radio1" checked>
+    <input type="radio" name="radio-btn" id="radio2">
+    <input type="radio" name="radio-btn" id="radio3">
+
+    <div class="slides">
+      <div class="slide" *ngFor="let slide of slides; let i = index">
+        <img [src]="slide.url" [alt]="slide.alt">
+      </div>
+    </div> </section>
+
+  <section class="destinos">
+    <h2>Destinos destacados</h2>
+    <div class="grid-destinos">
+      <div class="card" *ngFor="let destino of destinosDestacados">
+        <img [src]="destino.imagenUrl" [alt]="destino.ruta">
+        <div class="info">
+          <p>{{ destino.ruta }}</p>
+          <button (click)="comprarDestacado(destino)">Comprar</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="servicios">
+    <h2>Nuestros servicios</h2>
+    <div class="grid-servicios">
+      <div class="card" *ngFor="let servicio of servicios">
+        <img [src]="servicio.imagenUrl" [alt]="servicio.descripcion">
+        <div class="info">
+          <p>{{ servicio.descripcion }}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p>&copy; 2025 Adventure. Todos los derechos reservados.</p>
+</footer>

@@ -1,72 +1,103 @@
-import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core'; // <-- Importado ChangeDetectionStrategy
-import { CommonModule } from '@angular/common';
-// Importación crucial para formularios reactivos
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms'; 
-import { Router } from '@angular/router';
+// src/app/views/index/index.component.ts
 
-// Definición de tipos para las rutas y destinos (mock de datos)
-interface Destination {
-  id: number;
-  name: string;
-}
+import { Component, OnInit } from '@angular/core';
+import { Router, RouterModule } from '@angular/router'; // Asegúrate de tener RouterModule para routerLink
+import { FormsModule } from '@angular/forms'; // <-- ¡IMPORTA ESTO para ngModel!
+import { CommonModule } from '@angular/common'; // <-- ¡IMPORTA ESTO para *ngFor!
 
 @Component({
   selector: 'app-index',
-  standalone: true,
-  // CRÍTICO: ReactiveFormsModule es necesario para [formGroup] y formControlName
-  imports: [CommonModule, ReactiveFormsModule], 
-  // CRÍTICO: Usaremos archivos externos para el template y estilos
   templateUrl: './index.component.html',
-  styleUrls: ['./index.component.scss'], 
-  changeDetection: ChangeDetectionStrategy.OnPush // <-- CORREGIDO: Usando la enumeración OnPush
+  styleUrls: ['./index.component.scss'],
+  // Si es Standalone, necesitas declarar los módulos aquí:
+  standalone: true, // <-- Si tienes esta línea
+  imports: [
+    CommonModule, // Contiene *ngIf, *ngFor, etc.
+    FormsModule, // Contiene [(ngModel)]
+    RouterModule // Contiene routerLink
+  ] 
 })
 export class IndexComponent implements OnInit {
-  private fb = inject(FormBuilder);
-  private router = inject(Router);
+  // Propiedad para enlazar con el formulario de búsqueda
+  busqueda = {
+    origen: '',
+    destino: '',
+    fecha: new Date().toISOString().substring(0, 10) // Valor inicial
+  };
 
-  searchForm!: FormGroup;
-  
-  // Mock de datos para llenar los Selects
-  destinations: Destination[] = [
-    { id: 1, name: 'Lima' },
-    { id: 2, name: 'Cusco' },
-    { id: 3, name: 'Arequipa' },
-    { id: 4, name: 'Trujillo' },
-    { id: 5, name: 'Ica' },
-  ]; 
+  // Datos de ejemplo para los destinos destacados (reemplazar con datos reales de tu API)
+  destinosDestacados = [
+    { ruta: 'Lima - Cusco', imagenUrl: 'assets/images/Cusco.jpg', id: 1 },
+    { ruta: 'Arequipa - Puno', imagenUrl: 'assets/images/Puno.jpg', id: 2 },
+    { ruta: 'Trujillo - Chiclayo', imagenUrl: 'assets/images/Trujillo.jpg', id: 3 },
+  ];
+
+  // Datos de ejemplo para los servicios
+  servicios = [
+    { descripcion: 'Flota moderna y segura', imagenUrl: 'assets/images/servicio-flota.jpg' },
+    { descripcion: 'Viajes corporativos', imagenUrl: 'assets/images/servicio-corp.jpg' },
+    { descripcion: 'Compra online segura', imagenUrl: 'assets/images/servicio-online.jpg' },
+    { descripcion: 'Atención 24/7', imagenUrl: 'assets/images/servicio-soporte.jpg' },
+  ];
+
+  slides = [
+    { url: 'assets/images/Promocion.jpg', alt: 'Promoción 1' },
+    { url: 'assets/images/Cusco.jpg', alt: 'Promoción 2' },
+    { url: 'assets/images/Puno.jpg', alt: 'Promoción 3' },
+  ];
+
+  constructor(
+    private router: Router,
+    // private busService: BusService // Inyecta tu servicio aquí
+  ) { }
 
   ngOnInit(): void {
-    // Inicialización del formulario de búsqueda
-    this.searchForm = this.fb.group({
-      origin: ['', Validators.required],
-      destination: ['', Validators.required],
-      date: ['', Validators.required],
-      passengers: [1, [Validators.required, Validators.min(1), Validators.max(10)]],
-    });
+    // Aquí puedes cargar la lista de destinos destacados al iniciar
   }
 
-  /**
-   * Procesa la búsqueda de rutas de autobús y navega al componente de resultados.
-   */
-  onSubmit() {
-    if (this.searchForm.invalid) {
-      this.searchForm.markAllAsTouched();
-      return;
-    }
+  // MÉTODOS DEL HEADER Y BUSCADOR
+  
+  cambiarIdioma(event: Event) {
+    const target = event.target as HTMLSelectElement;
+    console.log('Cambiando idioma a:', target.value);
+    // Aquí iría la lógica para cambiar el idioma de la aplicación (i18n)
+  }
 
-    const { origin, destination, date, passengers } = this.searchForm.value;
+  buscarViaje() {
+    console.log('Buscando viaje:', this.busqueda);
+    // 1. Llama a tu BusService de Angular, que a su vez llama a tu API de Node.js
+    /*
+    this.busService.buscar(this.busqueda).subscribe(
+      (buses) => {
+        // 2. Navega al componente de selección de asientos/viajes
+        this.router.navigate(['/seleccion-asiento'], { state: { resultados: buses } });
+      },
+      (error) => {
+        console.error('Error en la búsqueda:', error);
+        alert('No se encontraron buses o hubo un error.');
+      }
+    );
+    */
+    // Por ahora, solo navegamos directamente para probar el ruteo
+    this.router.navigate(['/seleccion-asiento']); 
+  }
 
-    console.log('Buscando rutas:', { origin, destination, date, passengers });
+  seleccionarHoy() {
+    this.busqueda.fecha = new Date().toISOString().substring(0, 10);
+  }
 
-    // Navegar a la página de resultados de la búsqueda (asumiendo que tienes una ruta '/busqueda')
-    // Pasamos los parámetros de búsqueda como queryParams en la URL.
-    this.router.navigate(['/busqueda'], { 
-      queryParams: { 
-        origen: origin, 
-        destino: destination, 
-        fecha: date, 
-        pasajeros: passengers 
-      } 
-    });
+  seleccionarManana() {
+    const manana = new Date();
+    manana.setDate(manana.getDate() + 1);
+    this.busqueda.fecha = manana.toISOString().substring(0, 10);
+  }
+  
+  // MÉTODOS DE DESTACADOS
+
+  comprarDestacado(destino: any) {
+    console.log('Iniciando compra para:', destino.ruta);
+    // Puedes rellenar el formulario de búsqueda y luego navegar
+    this.busqueda.destino = destino.ruta.split(' - ')[1]; // Asumiendo formato "Origen - Destino"
+    this.router.navigate(['/seleccion-asiento']);
   }
 }

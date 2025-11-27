@@ -1,11 +1,10 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { ApplicationConfig } from '@angular/core';
 
-import { routes } from './app.component.routes';
+// **Nota:** Este archivo se mantiene solo para satisfacer la estructura de la CLI, 
+// pero se deja casi vacío ya que las rutas se manejan en 'main.ts'.
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideBrowserGlobalErrorListeners(),
-    provideRouter(routes)
+    // La configuración de rutas se mueve a main.ts.
   ]
 };

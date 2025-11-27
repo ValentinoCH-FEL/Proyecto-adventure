@@ -1,49 +1,83 @@
-// src/app/views/index/index.component.ts
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Router, RouterModule } from '@angular/router'; 
+import { FormsModule } from '@angular/forms'; 
+import { CommonModule } from '@angular/common'; 
 
-import { Component, OnInit } from '@angular/core';
-import { Router, RouterModule } from '@angular/router'; // Asegúrate de tener RouterModule para routerLink
-import { FormsModule } from '@angular/forms'; // <-- ¡IMPORTA ESTO para ngModel!
-import { CommonModule } from '@angular/common'; // <-- ¡IMPORTA ESTO para *ngFor!
+// 1. DEFINICIÓN DE INTERFACES PARA MEJORAR LA TIPIFICACIÓN DE DATOS
+interface Busqueda {
+  origen: string;
+  destino: string;
+  fecha: string; // Formato YYYY-MM-DD
+}
+
+interface DestinoDestacado {
+  ruta: string;
+  imagenUrl: string;
+  id: number;
+}
+
+interface Servicio {
+  descripcion: string;
+  imagenUrl: string;
+}
+
+interface Slide {
+  url: string;
+  alt: string;
+}
+
 
 @Component({
   selector: 'app-index',
   templateUrl: './index.component.html',
   styleUrls: ['./index.component.scss'],
-  // Si es Standalone, necesitas declarar los módulos aquí:
-  standalone: true, // <-- Si tienes esta línea
+  // Componente Standalone: Importaciones necesarias para plantillas
+  standalone: true, 
   imports: [
-    CommonModule, // Contiene *ngIf, *ngFor, etc.
-    FormsModule, // Contiene [(ngModel)]
-    RouterModule // Contiene routerLink
+    CommonModule, 
+    FormsModule, 
+    RouterModule 
   ] 
 })
-export class IndexComponent implements OnInit {
-  // Propiedad para enlazar con el formulario de búsqueda
-  busqueda = {
+
+export class IndexComponent implements OnInit, OnDestroy {
+  
+  // Propiedad para obtener la fecha mínima (hoy) y usarla en el input[type=date] del HTML
+  public minDate: string = new Date().toISOString().substring(0, 10);
+
+  // Propiedad para enlazar con el formulario de búsqueda, tipada con la interfaz Busqueda
+  busqueda: Busqueda = {
     origen: '',
     destino: '',
-    fecha: new Date().toISOString().substring(0, 10) // Valor inicial
+    fecha: this.minDate // Valor inicial: hoy
   };
+  
+  // Mensaje de error para el formulario de búsqueda
+  errorBusqueda: string = '';
 
-  // Datos de ejemplo para los destinos destacados (reemplazar con datos reales de tu API)
-  destinosDestacados = [
-    { ruta: 'Lima - Cusco', imagenUrl: 'assets/images/Cusco.jpg', id: 1 },
-    { ruta: 'Arequipa - Puno', imagenUrl: 'assets/images/Puno.jpg', id: 2 },
-    { ruta: 'Trujillo - Chiclayo', imagenUrl: 'assets/images/Trujillo.jpg', id: 3 },
+  // --- LÓGICA DEL CARRUSEL ---
+  slides: Slide[] = [
+    // Nota: Las imágenes deben estar en la carpeta 'assets' o ser URLs absolutas.
+    { url: 'images/Promocion.jpg', alt: 'Promoción de verano' },
+    { url: 'images/Cusco.jpg', alt: 'Viaja a la ciudad imperial del Cusco' },
+    { url: 'images/Puno.jpg', alt: 'Descubre el Lago Titicaca en Puno' },
+  ];
+  
+  currentSlide: number = 0; // Índice del slide actual (0-based)
+  private intervalId: ReturnType<typeof setInterval> | null = null; // ID para el intervalo de auto-slide
+
+  // --- DATOS DE EJEMPLO ---
+  destinosDestacados: DestinoDestacado[] = [
+    { ruta: 'Lima - Cusco', imagenUrl: 'images/Cusco.jpg', id: 1 }, 
+    { ruta: 'Arequipa - Puno', imagenUrl: 'images/Puno.jpg', id: 2 },
+    { ruta: 'Trujillo - Chiclayo', imagenUrl: 'images/chiclayo.jpg', id: 3 },
   ];
 
-  // Datos de ejemplo para los servicios
-  servicios = [
-    { descripcion: 'Flota moderna y segura', imagenUrl: 'assets/images/servicio-flota.jpg' },
-    { descripcion: 'Viajes corporativos', imagenUrl: 'assets/images/servicio-corp.jpg' },
-    { descripcion: 'Compra online segura', imagenUrl: 'assets/images/servicio-online.jpg' },
-    { descripcion: 'Atención 24/7', imagenUrl: 'assets/images/servicio-soporte.jpg' },
-  ];
-
-  slides = [
-    { url: 'assets/images/Promocion.jpg', alt: 'Promoción 1' },
-    { url: 'assets/images/Cusco.jpg', alt: 'Promoción 2' },
-    { url: 'assets/images/Puno.jpg', alt: 'Promoción 3' },
+  servicios: Servicio[] = [
+    { descripcion: 'Flota moderna y segura', imagenUrl: 'images/flota-adventure.png' },
+    { descripcion: 'Viajes corporativos', imagenUrl: 'images/viaje-corporativo.png' },
+    { descripcion: 'Compra online segura', imagenUrl: 'images/compra-online.jpg' },
+    { descripcion: 'Atención 24/7', imagenUrl: 'images/atencion.jpg' },
   ];
 
   constructor(
@@ -52,52 +86,138 @@ export class IndexComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    // Aquí puedes cargar la lista de destinos destacados al iniciar
+    // Lógica de inicialización
+    this.startAutoSlide();
+  }
+  
+  // Limpia el intervalo de auto-slide cuando el componente es destruido
+  ngOnDestroy(): void {
+    this.stopAutoSlide();
   }
 
-  // MÉTODOS DEL HEADER Y BUSCADOR
+  // --- MÉTODOS DEL CARRUSEL ---
+
+  startAutoSlide(): void {
+    this.stopAutoSlide(); // Detiene cualquier intervalo existente
+    // Usamos window.setInterval para asegurar el tipo correcto si no se usa Node.js
+    this.intervalId = setInterval(() => {
+      this.nextSlide();
+    }, 5000); // Auto-slide cada 5 segundos
+  }
+
+  stopAutoSlide(): void {
+    if (this.intervalId !== null) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+    }
+  }
+
+  // Navega al slide anterior
+  prevSlide(): void {
+    // Reinicia el auto-slide después de la interacción manual
+    this.startAutoSlide(); 
+    this.currentSlide = (this.currentSlide > 0) ? this.currentSlide - 1 : this.slides.length - 1;
+  }
+
+  // Navega al slide siguiente
+  nextSlide(): void {
+    this.currentSlide = (this.currentSlide < this.slides.length - 1) ? this.currentSlide + 1 : 0;
+  }
+
+  // Navega a un slide específico (usado por los indicadores)
+  goToSlide(index: number): void {
+    if (index >= 0 && index < this.slides.length) {
+      this.currentSlide = index;
+      // Reinicia el auto-slide después de la interacción manual
+      this.startAutoSlide(); 
+    }
+  }
+
+  // --- MÉTODOS DEL HEADER Y BUSCADOR ---
   
-  cambiarIdioma(event: Event) {
+  cambiarIdioma(event: Event): void {
     const target = event.target as HTMLSelectElement;
     console.log('Cambiando idioma a:', target.value);
-    // Aquí iría la lógica para cambiar el idioma de la aplicación (i18n)
+    // Lógica para cambiar el idioma de la aplicación (i18n)
   }
 
-  buscarViaje() {
+  /**
+   * Válida que los campos de Origen, Destino y Fecha sean válidos antes de navegar.
+   * También asegura que la fecha no sea pasada.
+   */
+  buscarViaje(): void {
+    this.errorBusqueda = ''; // Limpiar errores anteriores
+
+    if (!this.busqueda.origen || !this.busqueda.destino) {
+      this.errorBusqueda = 'Por favor, ingrese el origen y el destino del viaje.';
+      return;
+    }
+    
+    if (this.busqueda.origen.trim().toLowerCase() === this.busqueda.destino.trim().toLowerCase()) {
+        this.errorBusqueda = 'El origen y el destino no pueden ser el mismo.';
+        return;
+    }
+
+    // Validación de fecha: Asegura que la fecha seleccionada no es anterior a hoy
+    const fechaSeleccionada = new Date(this.busqueda.fecha);
+    const hoy = new Date(this.minDate); // Usamos minDate para consistencia
+    
+    // Compara solo las fechas, ignorando la hora
+    if (fechaSeleccionada < hoy) {
+      this.errorBusqueda = 'La fecha de viaje no puede ser anterior al día de hoy.';
+      return;
+    }
+    
+    // Si todo es válido, procede con la búsqueda
     console.log('Buscando viaje:', this.busqueda);
-    // 1. Llama a tu BusService de Angular, que a su vez llama a tu API de Node.js
-    /*
-    this.busService.buscar(this.busqueda).subscribe(
-      (buses) => {
-        // 2. Navega al componente de selección de asientos/viajes
-        this.router.navigate(['/seleccion-asiento'], { state: { resultados: buses } });
-      },
-      (error) => {
-        console.error('Error en la búsqueda:', error);
-        alert('No se encontraron buses o hubo un error.');
-      }
-    );
-    */
-    // Por ahora, solo navegamos directamente para probar el ruteo
+    // Aquí se ejecutaría la lógica de llamada a la API y manejo de resultados.
+    
+    // Navegación directa para pruebas
     this.router.navigate(['/seleccion-asiento']); 
   }
 
-  seleccionarHoy() {
-    this.busqueda.fecha = new Date().toISOString().substring(0, 10);
+  seleccionarHoy(): void {
+    this.busqueda.fecha = this.minDate; // Asigna la fecha de hoy
+    this.errorBusqueda = '';
   }
 
-  seleccionarManana() {
+  seleccionarManana(): void {
     const manana = new Date();
     manana.setDate(manana.getDate() + 1);
     this.busqueda.fecha = manana.toISOString().substring(0, 10);
+    this.errorBusqueda = '';
   }
   
-  // MÉTODOS DE DESTACADOS
+  // Función que se dispara cuando cambia el input de fecha. Ayuda con la validación.
+  onFechaChange(): void {
+    // Si la fecha es cambiada manualmente a un valor menor al mínimo, la corrige.
+    if (this.busqueda.fecha < this.minDate) {
+        // En un caso real, podríamos resetear a minDate o simplemente mostrar el error.
+        // Aquí lo dejamos para que el mensaje de error de buscarViaje() lo capture, 
+        // pero el HTML ya limita la selección. Esto es solo una medida de seguridad.
+        console.warn("Se seleccionó una fecha anterior a hoy.");
+    }
+    this.errorBusqueda = '';
+  }
+  
+  // --- MÉTODOS DE DESTACADOS ---
 
-  comprarDestacado(destino: any) {
+  comprarDestacado(destino: DestinoDestacado): void {
     console.log('Iniciando compra para:', destino.ruta);
-    // Puedes rellenar el formulario de búsqueda y luego navegar
-    this.busqueda.destino = destino.ruta.split(' - ')[1]; // Asumiendo formato "Origen - Destino"
-    this.router.navigate(['/seleccion-asiento']);
+    this.errorBusqueda = ''; // Limpiamos errores antes de proceder
+    
+    // Rellena el origen y destino de la búsqueda con la ruta destacada
+    const partes = destino.ruta.split(' - '); 
+    if (partes.length === 2) {
+      this.busqueda.origen = partes[0].trim();
+      this.busqueda.destino = partes[1].trim();
+      
+      // La fecha se mantiene en hoy/futuro según lo que esté configurado
+      
+      // Navega a la página de selección de asiento/viaje
+      this.router.navigate(['/seleccion-asiento']);
+    } else {
+        console.error('Formato de ruta destacada inválido:', destino.ruta);
+    }
   }
 }

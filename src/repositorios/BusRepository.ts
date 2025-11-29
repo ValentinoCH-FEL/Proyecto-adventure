@@ -19,9 +19,12 @@ export class BusRepository {
     /**
      * Obtiene un bus por su ID.
      */
-    static async findById(id: number): Promise<Bus | null> {
-        return BusRepo.findOneBy({ id });
-    }
+  static async findById(id: number): Promise<Bus | null> {
+    return BusRepo.findOne({
+        where: { id: id },
+        relations: ["asientosOcupados"] // <--- ¡ESTO ES LO MÁGICO!
+    });
+}
 
     /**
      * Guarda o actualiza un bus.

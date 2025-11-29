@@ -1,22 +1,29 @@
+// -----------------------------------------------------------
 // VARIABLES (Paleta corporativa moderna)
-$primary-color: #011638;    // Azul Marino Oscuro (Casi negro, para profundidad)
-$secondary-color: #0077b6;  // Azul Zafiro (Para acentos de marca, botones)
-$accent-color: #fca311;     // Naranja/Amarillo Calido (Para destacar)
-$hover-color: #00b4d8;      // Azul Cielo (Efectos de hover)
-$background-light: #f9f9fc; // Fondo muy claro y limpio (Off-white)
+// -----------------------------------------------------------
+$primary-color: #011638;    // Azul Marino Oscuro
+$secondary-color: #0077b6;  // Azul Zafiro
+$accent-color: #fca311;     // Naranja/Amarillo Calido
+$hover-color: #00b4d8;      // Azul Cielo
+$background-light: #f9f9fc; // Fondo muy claro
 $card-background: white;
 $text-dark: #333333;
 $text-light: #f0f0f0;
 $border-radius-lg: 12px;
 $transition-duration: 0.3s;
+$danger-color: #d32f2f;     // Rojo para errores/alertas
 
-// Mixin para un box-shadow elegante y moderno (elevación suave)
+// -----------------------------------------------------------
+// MIXINS
+// -----------------------------------------------------------
+
+// Sombra elegante
 @mixin elegant-shadow {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.05);
     transition: transform $transition-duration, box-shadow $transition-duration;
 }
 
-// Mixin para botones con gradiente sutil
+// Botones con gradiente
 @mixin gradient-button {
     background: linear-gradient(135deg, $secondary-color 0%, darken($secondary-color, 10%) 100%);
     border: none;
@@ -24,10 +31,11 @@ $transition-duration: 0.3s;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    cursor: pointer;
     
     &:hover {
         background: linear-gradient(135deg, $hover-color 0%, $secondary-color 100%);
-        transform: translateY(-2px); // Pequeña elevación
+        transform: translateY(-2px);
         box-shadow: 0 6px 15px rgba(0, 119, 182, 0.3);
     }
     
@@ -60,12 +68,12 @@ $transition-duration: 0.3s;
   padding: 1rem 0 0;
   color: $text-light;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-  position: relative; // Para posicionar el admin fuera
+  position: relative;
   
   .header-content-wrapper {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0 2rem; // Más padding lateral
+    padding: 0 2rem;
   }
   
   .navbar {
@@ -75,14 +83,13 @@ $transition-duration: 0.3s;
     padding-bottom: 1rem;
 
     .logo {
-      color: $accent-color; // Logo en color de acento
+      color: $accent-color;
       font-size: 2rem;
-      font-weight: 800; // Más negrita
+      font-weight: 800;
       letter-spacing: 1px;
       
-      // Estilo de "chispas" o acento visual para el logo, similar a tu ejemplo
       &::before {
-          content: '✈️'; // Icono o elemento decorativo
+          content: '✈️';
           font-size: 1.5rem;
           margin-right: 5px;
           display: inline-block;
@@ -90,60 +97,37 @@ $transition-duration: 0.3s;
       }
     }
 
-    .user-id {
-      font-size: 0.75rem;
-      opacity: 0.6;
-    }
-
     .menu {
       display: flex;
       list-style: none;
-      gap: 1.5rem; // Espacio ajustado para los nuevos botones/íconos
+      gap: 1.5rem;
       margin: 0;
       padding: 0;
 
-      li {
-        display: flex;
-        align-items: center;
-      }
+      li { display: flex; align-items: center; }
       
       a {
         color: $text-light;
         text-decoration: none;
-        position: relative;
-        padding: 0.5rem 0.75rem; // Padding uniforme para hacer clic
+        padding: 0.5rem 0.75rem;
         font-weight: 500;
         border-radius: 6px;
-        transition: background-color $transition-duration, color $transition-duration;
-        
+        transition: background-color $transition-duration;
         display: flex;
         align-items: center;
         gap: 5px; 
 
-        .menu-icon {
-            font-size: 1.2rem; 
-            color: $accent-color; 
-            transition: color $transition-duration;
-        }
-        
         &:hover {
             background-color: rgba(255, 255, 255, 0.1);
-            color: $text-light;
-        }
-
-        &::after { 
-            display: none; 
         }
       }
       
-      // Estilo específico para el selector de idiomas (botón "pill")
-      .language-selector {
-        select {
+      .language-selector select {
           appearance: none;
           background: linear-gradient(45deg, $secondary-color, $hover-color);
           color: white;
           padding: 0.5rem 1rem;
-          border-radius: 50px; // Forma de píldora
+          border-radius: 50px;
           border: none;
           font-weight: 600;
           cursor: pointer;
@@ -155,46 +139,36 @@ $transition-duration: 0.3s;
               background: linear-gradient(45deg, $hover-color, $secondary-color);
               box-shadow: 0 4px 10px rgba($secondary-color, 0.6);
           }
-        }
       }
     }
   }
   
-  // --- NUEVO ESTILO PARA EL BOTÓN ADMIN EN LA ESQUINA ---
   .admin-corner-link {
       position: absolute;
       top: 0;
       right: 0;
-      background: $accent-color; // Color de acento para que resalte
-      color: $primary-color; // Texto oscuro para contraste
+      background: $accent-color;
+      color: $primary-color;
       font-weight: 700;
       padding: 0.5rem 1rem;
       border-bottom-left-radius: $border-radius-lg;
       text-decoration: none;
       transition: background-color $transition-duration;
-      z-index: 20; // Asegura que esté por encima de la sombra del header
+      z-index: 20;
       
-      &:hover {
-          background-color: darken($accent-color, 10%);
-      }
-      
-      .menu-icon {
-        color: $primary-color; // Icono oscuro
-        margin-right: 5px;
-      }
+      &:hover { background-color: darken($accent-color, 10%); }
   }
 }
 
 // -----------------------------------------------------------
-// BUSCADOR (La pieza central con diseño premium)
+// BUSCADOR
 // -----------------------------------------------------------
 
 .buscador {
   background-color: white;
   padding: 1.5rem 0;
-  // Sombra más fuerte y elegante para destacar la herramienta de búsqueda
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15); 
-  border-radius: 0 0 $border-radius-lg $border-radius-lg; // Solo esquinas inferiores redondeadas
+  border-radius: 0 0 $border-radius-lg $border-radius-lg;
 
   .form-busqueda {
     max-width: 1100px;
@@ -205,25 +179,21 @@ $transition-duration: 0.3s;
     padding: 0 2rem;
 
     .campo {
-      position: relative; // Para mensajes de error
+      position: relative;
       flex-grow: 1;
       display: flex;
       align-items: center;
 
       input {
         width: 100%;
-        padding: 1rem 1.25rem; // Más espacio
+        padding: 1rem 1.25rem;
         border: 2px solid #e0e0e0; 
         border-radius: 8px;
         font-size: 1rem;
         color: $text-dark;
         transition: all $transition-duration;
         
-        // Estilo de placeholder
-        &::placeholder {
-            color: #a0a0a0;
-            font-weight: 300;
-        }
+        &::placeholder { color: #a0a0a0; font-weight: 300; }
 
         &:focus {
           border-color: $secondary-color;
@@ -235,18 +205,11 @@ $transition-duration: 0.3s;
 
     .icono {
       font-size: 1.8rem;
-      color: $secondary-color; // Icono en color principal
+      color: $secondary-color;
       margin: 0 5px;
-      cursor: pointer;
-      transition: color $transition-duration;
-      
-      &:hover {
-        color: $accent-color;
-      }
     }
     
     .fecha-selector {
-        // Rediseño las opciones de fecha como "pills" activas
         .opciones-fecha {
             display: flex;
             gap: 8px;
@@ -257,7 +220,7 @@ $transition-duration: 0.3s;
                 background: #e9eff5;
                 color: $primary-color;
                 border: 1px solid #c9d5e3;
-                border-radius: 50px; // Forma de píldora
+                border-radius: 50px;
                 cursor: pointer;
                 font-size: 0.9rem;
                 font-weight: 600;
@@ -267,11 +230,6 @@ $transition-duration: 0.3s;
                     background: $hover-color;
                     color: white;
                     border-color: $hover-color;
-                }
-                &.active {
-                    background: $secondary-color;
-                    color: white;
-                    border-color: $secondary-color;
                 }
             }
 
@@ -290,27 +248,134 @@ $transition-duration: 0.3s;
       border-radius: 8px;
       font-size: 1.1rem;
       flex-shrink: 0;
-      transition: all $transition-duration;
     }
   }
 }
 
-// Mensajes de error
-.error-message {
-    color: $accent-color; // Usar el color de acento para la visibilidad
-    font-size: 0.85rem;
-    position: absolute;
-    bottom: -1.8rem;
-    left: 0;
-    white-space: nowrap;
-    font-weight: 500;
-    // Animación de entrada
-    animation: fadeIn 0.3s ease-out;
+// -----------------------------------------------------------
+// RESULTADOS DE BÚSQUEDA (NUEVA SECCIÓN)
+// -----------------------------------------------------------
+// Estos estilos manejan la lista de buses que aparece al buscar
+
+.container-resultados {
+    max-width: 1000px;
+    margin: 30px auto 10px; // Margen superior para separar del buscador
+    padding: 0 2rem;
+    animation: slideUp 0.5s ease-out; // Animación de entrada
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-5px); }
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+.loading, .error-msg {
+    text-align: center;
+    padding: 2rem;
+    background: white;
+    border-radius: $border-radius-lg;
+    @include elegant-shadow;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.error-msg {
+    color: $danger-color;
+    border-left: 5px solid $danger-color;
+}
+
+.loading {
+    color: $secondary-color;
+}
+
+.lista-viajes {
+    h3 {
+        color: $primary-color;
+        margin-bottom: 20px;
+        font-size: 1.5rem;
+        border-bottom: 3px solid $accent-color;
+        display: inline-block;
+        padding-bottom: 5px;
+    }
+}
+
+// Tarjeta individual de resultado de bus
+.viaje-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    border-radius: $border-radius-lg;
+    padding: 20px 30px;
+    margin-bottom: 20px;
+    @include elegant-shadow;
+    border-left: 6px solid transparent; // Borde invisible para hover
+    transition: all $transition-duration;
+
+    &:hover {
+        transform: translateY(-5px);
+        border-left-color: $accent-color; // Aparece color naranja al pasar mouse
+    }
+
+    .viaje-info {
+        display: flex;
+        gap: 30px;
+        align-items: center;
+
+        .hora {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: $primary-color;
+            background: $background-light;
+            padding: 10px 15px;
+            border-radius: 8px;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .ruta-resumen {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            
+            strong { 
+                color: $secondary-color; 
+                font-size: 1.2rem; 
+            }
+            small { 
+                color: #666; 
+                font-size: 0.95rem;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                
+                &::before {
+                    content: '🚌'; // Icono decorativo
+                    font-size: 0.9rem;
+                }
+            }
+        }
+    }
+
+    .viaje-precio {
+        text-align: right;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 10px;
+
+        .precio {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: $primary-color;
+        }
+
+        button {
+            @include gradient-button;
+            padding: 10px 25px;
+            border-radius: 50px;
+            font-size: 0.95rem;
+        }
+    }
 }
 
 // -----------------------------------------------------------
@@ -335,7 +400,7 @@ main section {
     margin-bottom: 40px;
     position: relative;
     
-    &::after { // Separador más grueso y moderno
+    &::after {
         content: '';
         display: block;
         width: 80px;
@@ -349,34 +414,24 @@ main section {
 }
 
 // -----------------------------------------------------------
-// CARRUSEL (Efecto "Hero" con transparencia)
+// CARRUSEL
 // -----------------------------------------------------------
 
 .carrusel {
   position: relative;
   width: 100%;
   max-width: 1200px;
-  height: 500px; // Altura más grande para hero
+  height: 500px;
   margin: 40px auto;
   border-radius: $border-radius-lg;
   overflow: hidden;
   box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
   
-  .slide-overlay { // Capa para oscurecer y mejorar contraste de texto (si hubiera)
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.15); // Oscurecimiento ligero
-    z-index: 5;
-  }
-
   .slides {
     display: flex;
     width: 100%;
     height: 100%;
-    transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94); // Easing más profesional
+    transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     
     .slide {
       width: 100%;
@@ -391,7 +446,6 @@ main section {
     }
   }
   
-  // Flechas con diseño minimalista
   .prev, .next {
     position: absolute;
     top: 50%;
@@ -399,15 +453,13 @@ main section {
     background: none;
     color: white;
     border: 2px solid white;
-    padding: 0.5rem 0.5rem;
+    padding: 0.5rem;
     cursor: pointer;
     z-index: 10;
     font-size: 1.5rem;
-    line-height: 1;
     border-radius: 50%;
     width: 40px;
     height: 40px;
-    text-align: center;
     transition: all $transition-duration;
 
     &:hover {
@@ -420,14 +472,20 @@ main section {
   .prev { left: 20px; }
   .next { right: 20px; }
   
-  // Indicadores sutiles
   .indicators {
     bottom: 25px;
+    position: absolute;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
     
     span {
       width: 8px;
       height: 8px;
       background: rgba(255, 255, 255, 0.5);
+      border-radius: 50%;
+      cursor: pointer;
       
       &.active {
         background: $accent-color;
@@ -438,7 +496,6 @@ main section {
   }
 }
 
-
 // -----------------------------------------------------------
 // GRIDS Y CARDS
 // -----------------------------------------------------------
@@ -447,13 +504,13 @@ main section {
 .grid-servicios {
   display: flex;
   justify-content: center;
-  gap: 30px; // Más espacio
+  gap: 30px;
   flex-wrap: wrap;
 }
 
 article.card {
   background: $card-background;
-  width: 320px; // Tarjeta más ancha
+  width: 320px;
   border-radius: $border-radius-lg;
   overflow: hidden;
   @include elegant-shadow;
@@ -466,17 +523,15 @@ article.card {
 
   img {
     width: 100%;
-    aspect-ratio: 16 / 10; // Proporción más profesional
+    aspect-ratio: 16 / 10;
     object-fit: cover;
     transition: transform 0.5s ease;
     
-    &:hover {
-        transform: scale(1.03); 
-    }
+    &:hover { transform: scale(1.03); }
   }
 
   .info {
-    padding: 25px; // Más padding
+    padding: 25px;
     text-align: left;
 
     h3 {
@@ -502,52 +557,21 @@ article.card {
   }
 }
 
-// Estilos específicos para la sección de Servicios (íconos o tarjetas pequeñas)
 .service-card {
   width: 280px;
   text-align: center;
   
-  .image-container {
-      width: 100%;
-      height: 150px; 
-      margin-bottom: 10px;
-      overflow: hidden; 
-      border-top-left-radius: $border-radius-lg;
-      border-top-right-radius: $border-radius-lg;
-      
-      img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover; 
-        border-radius: 0;
-        padding: 0;
-        transition: transform 0.5s ease;
-        
-        &:hover {
-            transform: scale(1.05);
-        }
-      }
-  }
-  
   .info {
     padding: 15px 20px;
     
-    h3 {
-      font-size: 1.1rem;
-      margin-top: 5px;
-      margin-bottom: 0;
-      color: $secondary-color; // Títulos de servicio en azul
-      font-weight: 700;
-    }
     p {
       font-weight: 500;
-      margin-bottom: 0;
       color: $text-dark;
       font-size: 0.9rem;
+      margin: 0;
     }
   }
 }
-
 
 // -----------------------------------------------------------
 // FOOTER
@@ -555,35 +579,31 @@ article.card {
 
 footer {
   text-align: center;
-  padding: 3rem 0; // Más padding para que se vea sustancial
+  padding: 3rem 0;
   background: $primary-color;
-  color: #aebfd7; // Color de texto más suave
+  color: #aebfd7;
   margin-top: 80px;
   font-size: 0.9rem;
-  // Borde superior sutil con gradiente
   border-top: 5px solid $accent-color; 
 }
 
-
 // -----------------------------------------------------------
-// RESPONSIVE DESIGN (Ajustes de alta calidad)
+// RESPONSIVE DESIGN
 // -----------------------------------------------------------
 
 @media (max-width: 992px) {
   .header .header-content-wrapper,
   .main-content,
-  .buscador .form-busqueda {
-      padding: 0 1.5rem; // Reducir un poco el padding en tablet
+  .buscador .form-busqueda,
+  .container-resultados {
+      padding: 0 1.5rem;
   }
   
-  // Buscador de dos columnas
   .buscador .form-busqueda {
     flex-wrap: wrap; 
     gap: 15px;
 
-    .campo {
-      padding: 0;
-    }
+    .campo { padding: 0; }
     
     .input-origen, 
     .input-destino,
@@ -591,9 +611,7 @@ footer {
       width: calc(50% - 7.5px); 
     }
     
-    .icono {
-      display: none;
-    }
+    .icono { display: none; }
 
     .btn-buscar {
       width: 100%;
@@ -601,20 +619,35 @@ footer {
       order: 4; 
     }
   }
-  
-  // Tarjetas más compactas en tablet
-  article.card {
-      width: calc(50% - 20px);
-      max-width: 350px;
-  }
 }
 
 @media (max-width: 768px) {
-  
-  // Ajuste para que el admin corner no se vea raro en móviles
-  .header {
-      padding-top: 2rem; // Dar espacio al link de Admin
+  // Ajustes de Tarjeta de Resultados para móvil
+  .viaje-card {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 20px;
       
+      .viaje-info {
+          width: 100%;
+          justify-content: flex-start;
+      }
+      
+      .viaje-precio {
+          width: 100%;
+          display: flex;
+          flex-direction: row;
+          justify-content: space-between;
+          align-items: center;
+          border-top: 1px solid #eee;
+          padding-top: 15px;
+          
+          .precio { margin-bottom: 0; font-size: 1.4rem; }
+      }
+  }
+
+  .header {
+      padding-top: 2rem;
       .admin-corner-link {
           padding: 0.3rem 0.8rem;
           font-size: 0.8rem;
@@ -626,47 +659,30 @@ footer {
   .header .navbar {
     flex-direction: column;
     align-items: flex-start;
-  }
-
-  .header .navbar .menu {
-    margin-top: 10px;
-    flex-wrap: wrap;
-    width: 100%;
-    gap: 1rem;
+    
+    .menu {
+        margin-top: 10px;
+        flex-wrap: wrap;
+        width: 100%;
+        gap: 1rem;
+    }
   }
   
-  // Buscador de una sola columna en móviles
   .buscador .form-busqueda {
     gap: 10px;
     .input-origen, 
     .input-destino,
-    .fecha-selector {
-      width: 100%; 
-    }
+    .fecha-selector { width: 100%; }
+    
     .fecha-selector .opciones-fecha {
         flex-direction: column;
         align-items: stretch;
-        gap: 8px;
         
-        button { width: 100%; }
-        input[type="date"] { width: 100%; }
+        button, input[type="date"] { width: 100%; }
     }
   }
   
-  // Una sola columna para las tarjetas de destino
-  .grid-destinos .card {
-    width: 100%; 
-    max-width: 400px;
-  }
-  
-  // Dos columnas para servicios
-  .grid-servicios .service-card {
-    width: calc(50% - 15px); 
-    max-width: none;
-  }
-
-  // Reducir la altura del carrusel en móvil
-  .carrusel {
-    height: 350px;
-  }
+  .grid-destinos .card { width: 100%; max-width: 400px; }
+  .grid-servicios .service-card { width: calc(50% - 15px); max-width: none; }
+  .carrusel { height: 350px; }
 }

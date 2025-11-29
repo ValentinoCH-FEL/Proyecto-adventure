@@ -1,5 +1,5 @@
 <header class="header">
-  <!-- NUEVO: Wrapper para centrar y limitar el ancho de la navegación -->
+  <!-- Wrapper para centrar y limitar el ancho de la navegación -->
   <div class="header-content-wrapper">
     <nav class="navbar">
       <div class="logo">Adventure</div>
@@ -10,7 +10,7 @@
         <li>
           <a routerLink="/contacto">Contacto</a>
         </li>
-        <li class="language-selector"> <!-- Clase para estilizar el selector de idioma -->
+        <li class="language-selector">
           <label for="language-select">Idioma:</label>
           <select id="language-select" (change)="cambiarIdioma($event)">
             <option value="es">🇪🇸 ES</option>
@@ -19,18 +19,16 @@
           </select>
         </li>
         <li>
-          <a routerLink="/admin-login" class="btn-admin">Admin</a> <!-- Clase de botón para el enlace Admin -->
+          <a routerLink="/admin-login" class="btn-admin">Admin</a>
         </li>
       </ul>
     </nav>
   </div>
-  
 
-  <!-- BUSCADOR: Simplificación de etiquetas y adición de clases de layout -->
+  <!-- BUSCADOR -->
   <div class="buscador">
     <form (ngSubmit)="buscarViaje()" class="form-busqueda" aria-label="Formulario de búsqueda de viajes">
       
-      <!-- Se eliminaron los <label> individuales del buscador para un diseño más limpio, usando placeholder -->
       <div class="campo input-origen"> 
         <input type="text" id="origen" name="origen" placeholder="Buscar Origen" [(ngModel)]="busqueda.origen" required>
       </div>
@@ -41,12 +39,10 @@
         <input type="text" id="destino" name="destino" placeholder="Buscar Destino" [(ngModel)]="busqueda.destino" required>
       </div>
 
-      <div class="campo fecha-selector"> <!-- Contenedor para botones y fecha -->
-        <!-- No se necesita un <label> aquí si ya tenemos los botones de contexto -->
+      <div class="campo fecha-selector">
         <div class="opciones-fecha">
           <button type="button" (click)="seleccionarHoy()">Hoy</button>
           <button type="button" (click)="seleccionarManana()">Mañana</button>
-          <!-- El input de fecha usa ngModel y se conecta a la propiedad busqueda.fecha -->
           <input type="date" name="fecha" [(ngModel)]="busqueda.fecha" required>
         </div>
       </div>
@@ -58,56 +54,85 @@
   </div>
 </header>
 
-<main class="main-content"> <!-- NUEVO: Wrapper principal para centrar el contenido de las secciones -->
-  <section class="carrusel">
-    <!-- INICIO DE CAMBIOS PARA EL CARRUSEL FUNCIONAL -->
+<main class="main-content">
+  
+  <!-- ========================================== -->
+  <!-- NUEVA SECCIÓN DE RESULTADOS DE BÚSQUEDA    -->
+  <!-- ========================================== -->
+  <!-- Esta sección aparece dinámicamente cuando buscas algo -->
+  <div class="container-resultados" *ngIf="resultadosBusqueda.length > 0 || mensajeSinResultados || buscando">
     
-    <!-- CONTROLES DE NAVEGACIÓN (Flechas) -->
-    <!-- Se conectan a las funciones prevSlide() y nextSlide() del componente TS -->
+    <!-- Animación de carga -->
+    <div class="loading" *ngIf="buscando">
+      <p>🔄 Buscando las mejores rutas...</p>
+    </div>
+
+    <!-- Mensaje de error si no hay buses -->
+    <div class="error-msg" *ngIf="mensajeSinResultados">
+      {{ mensajeSinResultados }}
+    </div>
+
+    <!-- Lista de Tarjetas encontradas -->
+    <div class="lista-viajes" *ngIf="resultadosBusqueda.length > 0">
+      <h3>Viajes encontrados para el {{ busqueda.fecha }}:</h3>
+      
+      <div class="viaje-card" *ngFor="let viaje of resultadosBusqueda">
+        <div class="viaje-info">
+          <span class="hora">{{ viaje.horaSalida }}</span>
+          <div class="ruta-resumen">
+            <strong>{{ viaje.rutaOrigen }} ➝ {{ viaje.rutaDestino }}</strong>
+            <small>{{ viaje.modelo }} - {{ viaje.tipoServicio }}</small>
+          </div>
+        </div>
+        
+        <div class="viaje-precio">
+          <span class="precio">S/ {{ viaje.tarifaBase | number:'1.2-2' }}</span>
+          <!-- Botón inteligente: Lleva al mapa de asientos del ID real del bus -->
+          <button (click)="seleccionarViaje(viaje.id)">Elegir Asientos</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN CARRUSEL (Se mantiene igual) -->
+  <section class="carrusel">
     <button class="prev" (click)="prevSlide()">&#10094;</button>
     <button class="next" (click)="nextSlide()">&#10095;</button>
     
-    <!-- CONTENEDOR DE SLIDES -->
-    <!-- [style.transform] es CRÍTICO: mueve el contenedor horizontalmente basándose en currentSlide -->
     <div class="slides" [style.transform]="'translateX(-' + currentSlide * 100 + '%)'">
-      <!-- La estructura de los slides (imágenes) permanece igual -->
       <div class="slide" *ngFor="let slide of slides; let i = index">
         <img [src]="slide.url" [alt]="slide.alt">
       </div>
     </div>
     
-    <!-- INDICADORES (Puntos inferiores para navegar) -->
     <div class="indicators">
-      <!-- Itera sobre los slides y crea un punto por cada uno -->
       <span 
         *ngFor="let slide of slides; let i = index" 
         [class.active]="i === currentSlide"
         (click)="goToSlide(i)">
       </span>
     </div>
-
-    <!-- FIN DE CAMBIOS PARA EL CARRUSEL FUNCIONAL -->
   </section>
 
+  <!-- SECCIÓN DESTINOS (Se mantiene igual) -->
   <section class="destinos">
     <h2>Destinos destacados</h2>
     <div class="grid-destinos">
-      <article class="card destination-card" *ngFor="let destino of destinosDestacados"> <!-- Nueva clase de tarjeta -->
-        <!-- La imagen se enlaza al modelo TS -->
+      <article class="card destination-card" *ngFor="let destino of destinosDestacados">
         <img [src]="destino.imagenUrl" [alt]="destino.ruta">
         <div class="info">
-          <h3>{{ destino.ruta }}</h3> <!-- Usara h3 para el título dentro de la tarjeta -->
-          <button (click)="comprarDestacado(destino)" class="btn-primary">Comprar</button> <!-- Clase para botón primario -->
+          <h3>{{ destino.ruta }}</h3>
+          <button (click)="comprarDestacado(destino)" class="btn-primary">Comprar</button>
         </div>
       </article>
     </div>
   </section>
 
+  <!-- SECCIÓN SERVICIOS (Se mantiene igual) -->
   <section class="servicios">
     <h2>Nuestros servicios</h2>
     <div class="grid-servicios">
-      <article class="card service-card" *ngFor="let servicio of servicios"> <!-- Nueva clase de tarjeta de servicio -->
-        <!-- La imagen de servicio se enlaza al modelo TS -->
+      <article class="card service-card" *ngFor="let servicio of servicios">
         <img [src]="servicio.imagenUrl" [alt]="servicio.descripcion">
         <div class="info">
           <p>{{ servicio.descripcion }}</p>

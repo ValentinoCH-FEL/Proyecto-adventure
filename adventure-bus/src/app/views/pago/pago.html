@@ -1,1 +1,122 @@
-<p>pago works!</p>
+<div class="payment-container" *ngIf="reservaData">
+  
+  <div class="main-column">
+    <h2 class="page-title">Finalizar Compra</h2>
+    <p class="subtitle">Elige cómo quieres pagar tus pasajes</p>
+
+    <!-- SELECCIÓN DE MÉTODO -->
+    <div class="payment-methods">
+      
+      <!-- Opción 1: Tarjeta -->
+      <label class="method-option" [class.active]="metodoPago === 'TARJETA'">
+        <input type="radio" name="metodo" value="TARJETA" [(ngModel)]="metodoPago">
+        <div class="icon-wrapper">💳</div>
+        <div class="text-wrapper">
+          <span class="method-name">Tarjeta de Crédito / Débito</span>
+          <span class="method-desc">Visa, Mastercard, Amex</span>
+        </div>
+      </label>
+
+      <!-- Opción 2: Billetera Digital -->
+      <label class="method-option" [class.active]="metodoPago === 'YAPE'">
+        <input type="radio" name="metodo" value="YAPE" [(ngModel)]="metodoPago">
+        <div class="icon-wrapper" style="color: #bc36ea;">📱</div> <!-- Color Yape -->
+        <div class="text-wrapper">
+          <span class="method-name">Yape / Plin</span>
+          <span class="method-desc">Pago con código QR</span>
+        </div>
+      </label>
+
+    </div>
+
+    <!-- FORMULARIO DE TARJETA (Solo se ve si eliges Tarjeta) -->
+    <div class="card-form-container" *ngIf="metodoPago === 'TARJETA'">
+      <h3>Datos de la tarjeta</h3>
+      
+      <div class="card-visual">
+        <div class="chip"></div>
+        <div class="card-number-preview">{{ datosTarjeta.numero || '•••• •••• •••• ••••' }}</div>
+        <div class="card-name-preview">{{ datosTarjeta.nombre || 'NOMBRE DEL TITULAR' }}</div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Número de Tarjeta</label>
+          <input type="text" [(ngModel)]="datosTarjeta.numero" placeholder="0000 0000 0000 0000" maxlength="19">
+        </div>
+        
+        <div class="form-group full">
+          <label>Nombre del Titular</label>
+          <input type="text" [(ngModel)]="datosTarjeta.nombre" placeholder="Como aparece en la tarjeta">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group half">
+            <label>Vencimiento (MM/AA)</label>
+            <input type="text" [(ngModel)]="datosTarjeta.vencimiento" placeholder="MM/AA" maxlength="5">
+          </div>
+          <div class="form-group half">
+            <label>CVV / CVC</label>
+            <input type="password" [(ngModel)]="datosTarjeta.cvv" placeholder="123" maxlength="4">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGO CON YAPE (Solo se ve si eliges Yape) -->
+    <div class="qr-container" *ngIf="metodoPago === 'YAPE'">
+      <div class="qr-placeholder">
+        <!-- Reemplaza src con tu imagen real de QR si tienes una -->
+        <div class="qr-box">
+           <span style="font-size: 4rem;">qrcode</span>
+        </div>
+        <p>Escanea este código con tu app y confirma el pago</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- COLUMNA DERECHA: RESUMEN FINAL -->
+  <div class="sidebar-column">
+    <div class="summary-card">
+      <h3>Resumen del Pedido</h3>
+      
+      <div class="trip-summary">
+        <div class="route">
+          <strong>{{ reservaData.bus.rutaOrigen }}</strong> ➝ <strong>{{ reservaData.bus.rutaDestino }}</strong>
+        </div>
+        <div class="date-info">
+          📅 {{ reservaData.fecha }} • 🕒 {{ reservaData.bus.horaSalida }}
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="price-breakdown">
+        <div class="row">
+          <span>Asientos ({{ reservaData.pasajeros.length }})</span>
+          <span>S/ {{ reservaData.total | number:'1.2-2' }}</span>
+        </div>
+        <div class="row">
+          <span>Impuestos y tasas</span>
+          <span>S/ 0.00</span>
+        </div>
+      </div>
+
+      <div class="total-row">
+        <span>Total a Pagar</span>
+        <span class="amount">S/ {{ reservaData.total | number:'1.2-2' }}</span>
+      </div>
+
+      <button class="btn-pay" [disabled]="procesandoPago" (click)="procesarPago()">
+        <span *ngIf="!procesandoPago">PAGAR S/ {{ reservaData.total }}</span>
+        <span *ngIf="procesandoPago">Procesando... 🔄</span>
+      </button>
+
+      <div class="security-badge">
+        🔒 Pago 100% Seguro y Encriptado
+      </div>
+    </div>
+  </div>
+
+</div>

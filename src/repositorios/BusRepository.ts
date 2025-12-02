@@ -1,50 +1,57 @@
-// src/repositorios/BusRepository.ts
-
-import { Repository } from "typeorm";
+import { Repository, DeepPartial } from "typeorm";
 import { AppDataSource } from "../database/data-source";
 import { Bus } from "../modulos/Bus.entity";
 
-// Exportamos la instancia base del repositorio
+// Definimos el repositorio base y luego lo extendemos con métodos personalizados.
 const BusRepo: Repository<Bus> = AppDataSource.getRepository(Bus);
 
 export class BusRepository {
 
     /**
-     * Obtiene todos los buses.
+     * [READ] Obtiene TODOS los buses (activos e inactivos).
+     * Usado por el panel de administración para listar todos los vehículos.
      */
     static async findAll(): Promise<Bus[]> {
         return BusRepo.find();
     }
 
     /**
-     * Obtiene un bus por su ID.
+     * [READ] Obtiene un bus por su ID, incluyendo relaciones necesarias (como Asientos Ocupados).
+     * Usado para el mapa de asientos en el frontend y para la edición en el admin.
      */
-  static async findById(id: number): Promise<Bus | null> {
-    return BusRepo.findOne({
-        where: { id: id },
-        relations: ["asientosOcupados"] // <--- ¡ESTO ES LO MÁGICO!
-    });
-}
-
-    /**
-     * Guarda o actualiza un bus.
-     */
-    static async save(bus: Bus): Promise<Bus> {
-        return BusRepo.save(bus);
+    static async findById(id: number): Promise<Bus | null> {
+        return BusRepo.findOne({
+            where: { id: id },
+            relations: ["asientosOcupados"]
+        });
     }
 
     /**
-     * Elimina un bus por su ID.
+     * [CREATE/UPDATE] Guarda o actualiza un bus.
+     * TypeORM maneja esto con el mismo método: si el objeto tiene ID, actualiza; si no, inserta.
+     */
+    static async save(bus: DeepPartial<Bus>): Promise<Bus> {
+        // La firma con DeepPartial permite que se use tanto para crear ({placa: '...'}) 
+        // como para actualizar ({id: 5, placa: '...'}).
+        return BusRepo.save(bus as DeepPartial<Bus> & Bus);
+    }
+
+    /**
+     * [DELETE] Elimina un bus por su ID.
+     * Incluye verificación para manejar el error si el bus no existe.
      */
     static async deleteById(id: number): Promise<void> {
-        // En TypeORM, delete lanza una excepción si la fila no existe
-        await BusRepo.delete(id);
+        // Ejecuta la eliminación
+        const result = await BusRepo.delete(id);
+        
+        // Verifica si la eliminación fue exitosa
+        if (result.affected === 0) {
+            throw new Error(`Bus con ID ${id} no encontrado para eliminar.`);
+        }
     }
 
-    // --- Lógica de Búsqueda Especializada (Similares a Spring Data JPA) ---
-
     /**
-     * Obtiene solo los buses que están marcados como activos para la vista pública (image_4a3aa6.png).
+     * [READ] Obtiene solo los buses que están marcados como activos (Para el buscador público).
      */
     static async findByEstadoActivoTrue(): Promise<Bus[]> {
         return BusRepo.find({
@@ -52,10 +59,9 @@ export class BusRepository {
             order: { horaSalida: "ASC" } 
         });
     }
-    
+
     /**
-     * Busca buses por fragmento de placa, ignorando mayúsculas/minúsculas.
-     * Útil para el panel de administración (image_4a3a87.png).
+     * [READ] Busca buses por fragmento de placa (para el panel de administración).
      */
     static async findByPlacaContainingIgnoreCase(placa: string): Promise<Bus[]> {
         return BusRepo.createQueryBuilder("bus")

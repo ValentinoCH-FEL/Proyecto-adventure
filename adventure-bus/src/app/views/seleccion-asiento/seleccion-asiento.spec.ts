@@ -1,18 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { SeleccionAsientoComponent } from './seleccion-asiento';
 
-import { SeleccionAsiento } from './seleccion-asiento';
-
-describe('SeleccionAsiento', () => {
-  let component: SeleccionAsiento;
-  let fixture: ComponentFixture<SeleccionAsiento>;
+describe('SeleccionAsientoComponent', () => {
+  let component: SeleccionAsientoComponent;
+  let fixture: ComponentFixture<SeleccionAsientoComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [SeleccionAsiento]
+      imports: [SeleccionAsientoComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(SeleccionAsiento);
+    fixture = TestBed.createComponent(SeleccionAsientoComponent);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

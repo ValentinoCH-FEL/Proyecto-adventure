@@ -5,7 +5,8 @@
       <div class="logo">Adventure</div>
       <ul class="menu">
         <li>
-          <a routerLink="/autogestion">Autogestión</a>
+          <!-- ENLACE ACTIVO A AUTOGESTIÓN -->
+          <a routerLink="./autogestion">Autogestión</a>
         </li>
         <li>
           <a routerLink="/contacto">Contacto</a>
@@ -57,9 +58,8 @@
 <main class="main-content">
   
   <!-- ========================================== -->
-  <!-- NUEVA SECCIÓN DE RESULTADOS DE BÚSQUEDA    -->
+  <!-- SECCIÓN DE RESULTADOS DE BÚSQUEDA          -->
   <!-- ========================================== -->
-  <!-- Esta sección aparece dinámicamente cuando buscas algo -->
   <div class="container-resultados" *ngIf="resultadosBusqueda.length > 0 || mensajeSinResultados || buscando">
     
     <!-- Animación de carga -->
@@ -94,7 +94,7 @@
     </div>
   </div>
 
-  <!-- SECCIÓN CARRUSEL (Se mantiene igual) -->
+  <!-- SECCIÓN CARRUSEL -->
   <section class="carrusel">
     <button class="prev" (click)="prevSlide()">&#10094;</button>
     <button class="next" (click)="nextSlide()">&#10095;</button>
@@ -114,7 +114,7 @@
     </div>
   </section>
 
-  <!-- SECCIÓN DESTINOS (Se mantiene igual) -->
+  <!-- SECCIÓN DESTINOS -->
   <section class="destinos">
     <h2>Destinos destacados</h2>
     <div class="grid-destinos">
@@ -128,7 +128,7 @@
     </div>
   </section>
 
-  <!-- SECCIÓN SERVICIOS (Se mantiene igual) -->
+  <!-- SECCIÓN SERVICIOS -->
   <section class="servicios">
     <h2>Nuestros servicios</h2>
     <div class="grid-servicios">

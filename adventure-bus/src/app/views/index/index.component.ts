@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core'; // 1. Importamos ChangeDetectorRef
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core'; 
 import { Router, RouterModule } from '@angular/router'; 
 import { FormsModule } from '@angular/forms'; 
 import { CommonModule } from '@angular/common'; 

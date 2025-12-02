@@ -1,9 +1,8 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { BusService, BusDTO } from '../../services/bus.service'; // Asegúrate que la ruta sea correcta
+import { BusService, BusDTO } from '../../services/bus.service';
 
-// Modelo visual solo para el frontend
 interface AsientoVisual {
   numero: string;
   piso: 1 | 2;
@@ -38,7 +37,6 @@ export class SeleccionAsientoComponent implements OnInit {
 
   ngOnInit() {
     // Leemos el ID del bus y la FECHA de la URL
-    // Ejemplo: /seleccion-asiento/15?fecha=2024-12-25
     const idBus = this.route.snapshot.paramMap.get('id');
     const fecha = this.route.snapshot.queryParamMap.get('fecha');
 
@@ -46,8 +44,8 @@ export class SeleccionAsientoComponent implements OnInit {
       this.fechaViaje.set(fecha);
       this.cargarDatosBus(Number(idBus));
     } else {
-      // Si entra sin datos, lo devolvemos al inicio (opcional)
       console.error("Faltan parámetros");
+      this.router.navigate(['/']); // Si faltan datos, volver al home
     }
   }
 
@@ -64,43 +62,39 @@ export class SeleccionAsientoComponent implements OnInit {
   construirMapaBus(data: BusDTO) {
     const listaAsientos: AsientoVisual[] = [];
     const precioBase = Number(data.tarifaBase);
-    const fechaBuscada = this.fechaViaje(); // '2024-12-25'
+    const fechaBuscada = this.fechaViaje();
 
     // 1. Filtrar ocupados: Solo marcamos ocupado si coincide la fecha
-    // Convertimos a string para asegurar comparación
-    const ocupadosIds = data.asientosOcupados
-      .filter(ocup => ocup.fechaViaje.toString().includes(fechaBuscada))
-      .map(ocup => ocup.numeroAsiento.toString());
+    // CÓDIGO CORREGIDO (Agregamos el "|| []")
+// Esto significa: Si data.asientosOcupados es nulo, usa un array vacío []
+const ocupadosIds = (data.asientosOcupados || []) 
+    .filter(ocup => ocup.fechaViaje.toString().includes(fechaBuscada))
+    .map(ocup => ocup.numeroAsiento.toString());
 
     // 2. Generar cajitas para cada asiento
     for (let i = 1; i <= data.capacidadTotal; i++) {
       const numStr = i.toString();
       
-      // Lógica de pisos:
-      // Si el bus tiene > 45 asientos, asientos 1-12 son Piso 1 (VIP)
-      // Si el bus es pequeño (<= 45), es de un solo piso.
+      // Lógica de pisos (si > 45 asientos, 1-12 son VIP piso 1)
       let esPiso1 = (i <= 12 && data.capacidadTotal > 45) || data.capacidadTotal <= 45;
       
-      // El piso 1 (VIP) suele costar más
       const precioFinal = (esPiso1 && data.capacidadTotal > 45) ? precioBase * 1.3 : precioBase;
 
       listaAsientos.push({
         numero: numStr,
-        piso: esPiso1 && data.capacidadTotal > 45 ? 1 : 2, // Si es bus de 1 piso, lo mandamos al piso lógico 2 o 1 según prefieras
+        piso: esPiso1 && data.capacidadTotal > 45 ? 1 : 2,
         estado: ocupadosIds.includes(numStr) ? 'ocupado' : 'libre',
         precio: precioFinal
       });
     }
 
-    // Separamos en arrays para pintar fácil
-    // Nota: Si es bus de 1 piso, todo irá a una lista y la otra vacía
     if (data.capacidadTotal <= 45) {
-       this.piso1.set(listaAsientos); // Todo piso 1
+       this.piso1.set(listaAsientos);
        this.pisoActivo.set(1);
     } else {
        this.piso1.set(listaAsientos.filter(a => a.piso === 1));
        this.piso2.set(listaAsientos.filter(a => a.piso === 2));
-       this.pisoActivo.set(2); // Usualmente se muestra primero el segundo piso en web
+       this.pisoActivo.set(2);
     }
   }
 
@@ -111,11 +105,9 @@ export class SeleccionAsientoComponent implements OnInit {
       const yaExiste = lista.find(s => s.numero === asiento.numero);
       
       if (yaExiste) {
-        // Deseleccionar
         asiento.estado = 'libre';
         return lista.filter(s => s.numero !== asiento.numero);
       } else {
-        // Seleccionar (Validar máximo 5)
         if (lista.length >= 5) {
           alert("Máximo 5 pasajes por compra");
           return lista;
@@ -130,8 +122,9 @@ export class SeleccionAsientoComponent implements OnInit {
     this.pisoActivo.set(piso);
   }
 
+  // --- AQUÍ ESTABA EL ERROR DE NAVEGACIÓN ---
   irAPagar() {
-    // Guardamos la info en localStorage para recuperarla en la vista de pago
+    // Guardamos la info en localStorage
     const resumenCompra = {
       bus: this.bus(),
       asientos: this.seleccionados(),
@@ -140,7 +133,7 @@ export class SeleccionAsientoComponent implements OnInit {
     };
     localStorage.setItem('reserva_temporal', JSON.stringify(resumenCompra));
     
-    // Navegar a la ruta de pago
-    this.router.navigate(['/pago']);
+    // CORRECCIÓN: Ahora navegamos a la pantalla de Registro de Pasajeros
+    this.router.navigate(['/registro-pasajero']);
   }
 }

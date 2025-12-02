@@ -1,0 +1,423 @@
+// --- VARIABLES ---
+$primary: #011638;
+$secondary: #0077b6;
+$accent: #fca311;
+$bg-light: #f4f7f6;
+$border-color: #dce0e4;
+$input-bg: #ffffff;
+$danger: #dc3545; // Nuevo color para errores y alertas
+
+// --- RESET BÁSICO ---
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+// --- CONTENEDOR PRINCIPAL ---
+.checkout-container {
+  max-width: 1250px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  display: flex;
+  gap: 30px;
+  align-items: flex-start;
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: $bg-light;
+  min-height: 100vh;
+  color: #333;
+
+  @media (max-width: 992px) {
+    flex-direction: column;
+  }
+}
+
+// --- COLUMNA IZQUIERDA (FORMULARIOS) ---
+.main-column {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+}
+
+.page-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: $primary;
+  margin-top: 0;
+  margin-bottom: 5px;
+}
+
+.subtitle {
+  color: #666;
+  margin-bottom: 25px;
+  font-size: 1rem;
+}
+
+// --- TARJETA DE PASAJERO ---
+.passenger-card {
+  background: white;
+  border: 1px solid $border-color;
+  border-radius: 10px;
+  margin-bottom: 25px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+  overflow: hidden;
+
+  .card-header {
+    background-color: #f8f9fa;
+    padding: 15px 25px;
+    border-bottom: 1px solid $border-color;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: $primary;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .badge {
+      background: #e9ecef;
+      color: #495057;
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .seat-info {
+      font-size: 0.9rem;
+      color: $secondary;
+      font-weight: 600;
+    }
+  }
+
+  .card-body {
+    padding: 25px;
+  }
+}
+
+// --- SISTEMA DE GRILLA (INPUTS) ---
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-right: -10px;
+  margin-left: -10px;
+  margin-bottom: 15px;
+}
+
+// Asterisco rojo para campos obligatorios
+.req {
+  color: $danger;
+  margin-left: 3px;
+  font-weight: bold;
+}
+
+.form-group {
+  padding-left: 10px;
+  padding-right: 10px;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0;
+
+  // Anchos responsivos
+  &.col-md-4 { width: 33.3333%; }
+  &.col-md-6 { width: 50%; }
+  &.col-md-8 { width: 66.6667%; }
+  
+  // Clase utilitaria para filas de 3 columnas (opcional)
+  &.col-md-3 { width: 25%; }
+
+  @media (max-width: 768px) {
+    &.col-md-4, &.col-md-6, &.col-md-8, &.three-cols .form-group {
+      width: 100%;
+      margin-bottom: 15px;
+    }
+  }
+
+  // Soporte para fila de 3 columnas automático si usas .three-cols en el padre
+  .three-cols & {
+    width: 33.333%;
+  }
+
+  label {
+    font-size: 0.85rem;
+    color: #555;
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+
+  .form-control {
+    width: 100%;
+    height: 42px;
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    color: #495057;
+    background-color: $input-bg;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+
+    &:focus {
+      outline: none;
+      border-color: $secondary;
+      box-shadow: 0 0 0 3px rgba($secondary, 0.15);
+    }
+
+    &::placeholder {
+      color: #adb5bd;
+    }
+
+    // ESTILO DE ERROR (NUEVO)
+    // Se activa cuando Angular agrega la clase .is-invalid
+    &.is-invalid {
+      border-color: $danger !important;
+      background-color: #fff8f8;
+      
+      &:focus {
+        box-shadow: 0 0 0 3px rgba($danger, 0.15);
+      }
+    }
+  }
+
+  // MENSAJE DE ERROR TEXTUAL (NUEVO)
+  .error-feedback {
+    color: $danger;
+    font-size: 0.75rem;
+    margin-top: 5px;
+    font-weight: 500;
+    animation: fadeIn 0.3s ease;
+    display: flex;
+    align-items: center;
+    
+    &::before {
+      content: "⚠ ";
+      margin-right: 4px;
+    }
+  }
+}
+
+.alert-info {
+  background-color: #e3f2fd;
+  border: 1px solid #bbdefb;
+  color: #0c5460;
+  padding: 15px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  margin-top: 10px;
+}
+
+// --- COLUMNA DERECHA (RESUMEN STICKY) ---
+.sidebar-column {
+  width: 360px;
+  flex-shrink: 0;
+  
+  @media (max-width: 992px) {
+    width: 100%;
+    order: -1;
+  }
+}
+
+.summary-card {
+  background: white;
+  padding: 25px;
+  border-radius: 10px;
+  border: 1px solid $border-color;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  position: sticky;
+  top: 20px;
+
+  // --- NUEVO: ESTILO DEL CONTADOR ---
+  .timer-box {
+    background-color: #e6f7ff;
+    border: 1px solid #91d5ff;
+    color: #0050b3;
+    padding: 12px 15px;
+    border-radius: 8px;
+    margin-bottom: 25px; // Separación del título
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 700;
+    transition: all 0.3s ease;
+
+    .timer-label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .timer-value {
+      font-size: 1.3rem;
+      font-variant-numeric: tabular-nums; // Números alineados
+    }
+
+    // Estado de peligro (poco tiempo)
+    &.danger {
+      background-color: #fff1f0;
+      border-color: #ffa39e;
+      color: $danger;
+      animation: pulse 1.5s infinite; // Latido
+    }
+  }
+
+  h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0 0 20px 0;
+    color: $primary;
+    border-bottom: 2px solid $secondary;
+    padding-bottom: 10px;
+    display: inline-block;
+  }
+
+  .total-price {
+    background-color: #f1f3f5;
+    padding: 15px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+
+    span { font-size: 0.95rem; color: #666; }
+    strong { font-size: 1.4rem; color: $primary; }
+  }
+
+  .divider {
+    height: 1px;
+    background-color: $border-color;
+    margin: 20px 0;
+  }
+
+  h4 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: #888;
+    margin-bottom: 15px;
+    letter-spacing: 0.5px;
+  }
+
+  .item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.95rem;
+    color: #444;
+    margin-bottom: 10px;
+  }
+
+  .trip-details {
+    p { margin: 6px 0; font-size: 0.95rem; color: #333; }
+    .route { font-weight: 700; color: $primary; font-size: 1rem; }
+    .date { color: #666; font-size: 0.9rem; }
+    .bus-type { color: $secondary; font-weight: 600; }
+  }
+
+  .btn-next {
+    width: 100%;
+    background-color: $primary;
+    color: white;
+    font-weight: 600;
+    font-size: 1.1rem;
+    padding: 14px;
+    border: none;
+    border-radius: 6px;
+    margin-top: 25px;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 6px rgba(1, 22, 56, 0.15);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    &:hover {
+      background-color: lighten($primary, 10%);
+      transform: translateY(-1px);
+    }
+    
+    // Estilo deshabilitado (cuando expira el tiempo)
+    &:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+  }
+}
+
+// --- NUEVO: MODAL DE TIEMPO EXPIRADO ---
+.expired-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(1, 22, 56, 0.9); // Fondo oscuro con tinte azul
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(5px);
+  animation: fadeIn 0.3s ease;
+}
+
+.expired-modal {
+  background: white;
+  padding: 40px;
+  border-radius: 16px;
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+  transform: scale(1);
+  animation: pulse 0.3s ease-out;
+
+  .icon { 
+    font-size: 3.5rem; 
+    margin-bottom: 1rem;
+    display: block;
+  }
+  
+  h2 { 
+    color: $primary; 
+    margin-bottom: 0.5rem; 
+    font-size: 1.5rem;
+  }
+  
+  p { 
+    color: #666; 
+    margin-bottom: 2rem;
+    line-height: 1.5;
+  }
+  
+  .btn-primary {
+    background: $primary;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s;
+
+    &:hover { background: lighten($primary, 10%); }
+  }
+}
+
+// --- ANIMACIONES ---
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}

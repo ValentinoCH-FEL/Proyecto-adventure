@@ -1,12 +1,15 @@
 import { ApplicationConfig } from '@angular/core';
-import { routes } from './app.routes'; 
-import { provideRouter, provideRoutes } from '@angular/router';
-// **Nota:** Este archivo se mantiene solo para satisfacer la estructura de la CLI, 
-// pero se deja casi vacío ya que las rutas se manejan en 'main.ts'.
+import { provideRouter } from '@angular/router';
+import { routes } from './app.routes';
+// 1. Importamos la función para proveer interceptores
+import { provideHttpClient, withInterceptors, withFetch } from '@angular/common/http'; 
+// 2. Importamos nuestro interceptor de seguridad
+import { authInterceptor } from './core/interceptors/auth.interceptor'; 
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
-    
+    // 3. REGISTRAMOS EL INTERCEPTOR JWT
+    provideHttpClient(withInterceptors([authInterceptor]), withFetch()) 
   ]
 };

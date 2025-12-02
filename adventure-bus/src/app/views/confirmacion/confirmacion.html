@@ -1,1 +1,57 @@
-<p>confirmacion works!</p>
+<div class="confirmation-container" *ngIf="datosViaje">
+  
+  <div class="ticket-card">
+    
+    <!-- ICONO DE ÉXITO -->
+    <div class="success-icon">
+      <div class="check-circle">✓</div>
+    </div>
+
+    <h1 class="title">¡Compra realizada con éxito!</h1>
+    <p class="subtitle">
+      Tu reserva ha sido procesada correctamente. <br>
+      Hemos enviado este boleto a: <strong>{{ emailUsuario }}</strong>
+    </p>
+
+    <!-- DETALLES DEL TICKET -->
+    <div class="ticket-details">
+      <div class="detail-row">
+        <span class="label">Número de reserva:</span>
+        <span class="value highlight">{{ codigoReserva }}</span>
+      </div>
+      
+      <div class="detail-row">
+        <span class="label">Destino:</span>
+        <span class="value">{{ datosViaje.bus.rutaDestino }}</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="label">Salida:</span>
+        <span class="value">{{ datosViaje.bus.rutaOrigen }}</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="label">Fecha:</span>
+        <span class="value">{{ datosViaje.fecha }} - {{ datosViaje.bus.horaSalida }}</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="label">Pasajeros:</span>
+        <span class="value">{{ datosViaje.pasajeros.length }} persona(s)</span>
+      </div>
+    </div>
+
+    <!-- CÓDIGO QR -->
+    <div class="qr-section">
+      <img [src]="qrUrl" alt="Código QR de Reserva">
+      <p class="qr-help">Presenta este código al abordar o úsalo en "Autogestión" para cambios.</p>
+    </div>
+
+    <!-- BOTÓN -->
+    <button class="btn-home" (click)="volverAlInicio()">
+      Volver al inicio
+    </button>
+
+  </div>
+
+</div>

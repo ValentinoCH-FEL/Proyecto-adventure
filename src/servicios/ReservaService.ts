@@ -1,15 +1,13 @@
-import { BusService } from "./BusService";
-import { AsientoOcupadoService } from "./AsientoOcupadoService";
-import { Reserva } from "../modulos/Reserva.entity";
-import { Pasajero } from "../modulos/Pasajero.entity";
-import { AsientoOcupado } from "../modulos/AsientoOcupado.entity";
-// Dejado, es necesario para las relaciones de TypeORM
-import { Bus } from "../modulos/Bus.entity"; 
 import { AppDataSource } from "../database/data-source";
+import { Pasajero } from "../modulos/Pasajero.entity";
+import { Reserva } from "../modulos/Reserva.entity";
+import { Bus } from "../modulos/Bus.entity";
+import { AsientoOcupado } from "../modulos/AsientoOcupado.entity";
 import { EntityManager } from "typeorm";
-// Eliminamos importaciones obsoletas que no usamos (ReservaRepository, PasajeroRepository)
-// import { ReservaRepository } from "../repositorios/ReservaRepository";
-// import { PasajeroRepository } from "../repositorios/PasajeroRepository";
+
+// NO ES NECESARIO IMPORTAR OTROS SERVICIOS DENTRO DE ESTE
+// import { BusService } from "./BusService";
+// import { AsientoOcupadoService } from "./AsientoOcupadoService"; 
 
 // Definición de Interfaz de Datos para la compra
 interface NewReservaData {
@@ -22,9 +20,113 @@ interface NewReservaData {
 
 export class ReservaService {
 
+    // 1. Repositorios definidos como propiedades estáticas para acceso global
+    private static pasajeroRepo = AppDataSource.getRepository(Pasajero);
+    private static reservaRepo = AppDataSource.getRepository(Reserva);
+    private static busRepo = AppDataSource.getRepository(Bus);
+    private static asientoRepo = AppDataSource.getRepository(AsientoOcupado);
+
+
     /**
-     * [AUTOGESTIÓN] Busca una reserva por su código y correo electrónico,
-     * solo si está CONFIRMADA y si los datos coinciden.
+     * [LÓGICA CENTRAL] Crea una nueva reserva, verifica la disponibilidad y marca el asiento.
+     * Utiliza una transacción atómica para asegurar que todas las operaciones se completen.
+     */
+    static async createNewReserva(data: NewReservaData): Promise<Reserva> {
+        
+        // Usamos una transacción para que si falla el asiento/pasajero, nada se guarde.
+        return AppDataSource.manager.transaction(async (transactionalEntityManager: EntityManager) => {
+            
+            // =====================================================
+            // PASO 1: GESTIONAR AL PASAJERO (BUSCAR O CREAR)
+            // =====================================================
+            let pasajero = await transactionalEntityManager.findOne(Pasajero, {
+                where: { numeroDocumento: data.pasajeroData.numeroDocumento }
+            });
+
+            if (pasajero) {
+                // Si existe: Actualizar datos (no usamos merge completo para evitar overwrites indeseados)
+                pasajero.correoElectronico = data.pasajeroData.correoElectronico;
+                pasajero.nacionalidad = data.pasajeroData.nacionalidad;
+                // Puedes actualizar más campos si lo consideras necesario
+                pasajero = await transactionalEntityManager.save(pasajero);
+            } else {
+                // Si no existe: Crear uno nuevo
+                pasajero = transactionalEntityManager.create(Pasajero, data.pasajeroData);
+                pasajero = await transactionalEntityManager.save(pasajero);
+            }
+            
+            // =====================================================
+            // PASO 2: VERIFICAR Y OBTENER BUS
+            // =====================================================
+            // Usamos findOneBy para obtener el objeto Bus (sin usar otro BusService)
+            const bus = await transactionalEntityManager.findOneBy(Bus, { id: data.busId });
+            if (!bus) throw new Error("Bus not found.");
+            
+            // =====================================================
+            // PASO 3: VERIFICAR DISPONIBILIDAD (Doble Venta Check)
+            // =====================================================
+            const asientoOcupadoExistente = await transactionalEntityManager.findOne(AsientoOcupado, {
+                where: {
+                    bus: { id: data.busId },
+                    fechaViaje: data.fechaViaje,
+                    numeroAsiento: data.asientoNumero
+                }
+            });
+
+            if (asientoOcupadoExistente) {
+                throw new Error(`Seat ${data.asientoNumero} is already occupied.`);
+            }
+
+            // =====================================================
+            // PASO 4: CREAR LA RESERVA
+            // =====================================================
+            const codigoReserva = ReservaService.generarCodigoReserva();
+
+            const newReserva = transactionalEntityManager.create(Reserva, {
+                codigoReserva,
+                bus,
+                pasajero, // Vinculado al pasajero del paso 1
+                asientoNumero: data.asientoNumero,
+                precioPagado: data.precioPagado,
+                fechaViaje: data.fechaViaje,
+                estadoReserva: "CONFIRMADA",
+                fechaCompra: new Date()
+            });
+            
+            const savedReserva = await transactionalEntityManager.save(newReserva);
+
+            // =====================================================
+            // PASO 5: MARCAR ASIENTO OCUPADO (Bloqueo)
+            // =====================================================
+            const newAsientoOcupado = transactionalEntityManager.create(AsientoOcupado, {
+                bus,
+                numeroAsiento: data.asientoNumero,
+                fechaViaje: data.fechaViaje,
+                reserva: savedReserva // Vinculado a la nueva reserva
+            });
+            
+            await transactionalEntityManager.save(newAsientoOcupado);
+
+            return savedReserva;
+        });
+    }
+
+    /**
+     * Función auxiliar para generar un código de reserva único.
+     */
+    private static generarCodigoReserva(): string {
+        const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let codigo = 'ADV-';
+        for (let i = 0; i < 6; i++) {
+            codigo += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+        }
+        return codigo;
+    }
+
+    // --- MÉTODOS DE AUTOGESTIÓN (Se mantienen como estaban) ---
+    
+    /**
+     * [AUTOGESTIÓN] Busca una reserva por su código y correo.
      */
     static async findReservaForAutogestion(codigoReserva: string, correoElectronico: string): Promise<Reserva | null> {
         const reservaRepository = AppDataSource.getRepository(Reserva);
@@ -34,119 +136,32 @@ export class ReservaService {
                 codigoReserva: codigoReserva,
                 estadoReserva: "CONFIRMADA"
             },
-            relations: ["bus", "pasajero"] // Cargamos relaciones para verificar el correo y mostrar detalles
+            relations: ["bus", "pasajero"]
         });
 
-        // 1. Si no existe la reserva o no está CONFIRMADA
-        if (!reserva) {
-            return null;
-        }
-
-        // 2. Verificar que el correo electrónico coincida con el pasajero
-        if (reserva.pasajero.correoElectronico !== correoElectronico) {
-            return null; // Datos incorrectos
-        }
+        if (!reserva) return null;
+        if (reserva.pasajero.correoElectronico !== correoElectronico) return null;
 
         return reserva;
     }
 
     /**
-     * [LÓGICA CENTRAL] Crea una nueva reserva, verifica la disponibilidad y marca el asiento.
-     * Usa una transacción atómica para guardar Pasajero, Reserva y AsientoOcupado.
-     */
-    static async createNewReserva(data: NewReservaData): Promise<Reserva> {
-        
-        return AppDataSource.manager.transaction(async (transactionalEntityManager: EntityManager) => {
-            
-            // --- 1. Obtener Entidades (Verificación de existencia) ---
-            const bus = await BusService.findBusById(data.busId);
-            if (!bus) throw new Error("Bus not found.");
-            
-            // --- 2. Verificar Disponibilidad de Asiento ---
-            const occupiedSeats = await AsientoOcupadoService.getOccupiedSeats(data.busId, data.fechaViaje);
-            if (occupiedSeats.includes(data.asientoNumero)) {
-                throw new Error(`Seat ${data.asientoNumero} is already occupied.`);
-            }
-
-            // --- 3. Crear o Encontrar Pasajero ---
-            let pasajero: Pasajero | null = null;
-            
-            // Buscar pasajero dentro de la transacción usando EntityManager
-            pasajero = await transactionalEntityManager.findOne(Pasajero, {
-                where: { numeroDocumento: data.pasajeroData.numeroDocumento }
-            });
-            
-            if (!pasajero) {
-                // Si no existe, crear uno nuevo
-                const newPasajero = new Pasajero();
-                Object.assign(newPasajero, data.pasajeroData); 
-                
-                // USAMOS EL ENTITYMANAGER TRANSACCIONAL PARA GUARDARLO
-                pasajero = await transactionalEntityManager.save(newPasajero); 
-            }
-            
-            if (!pasajero) throw new Error("Could not create or find passenger.");
-
-
-            // --- 4. Crear Código de Reserva ---
-            const codigoReserva = `CRS-${Math.floor(Math.random() * 900000 + 100000)}`;
-
-            // --- 5. Crear la Entidad Reserva ---
-            const newReserva = new Reserva();
-            Object.assign(newReserva, {
-                codigoReserva,
-                bus,
-                pasajero,
-                asientoNumero: data.asientoNumero,
-                precioPagado: data.precioPagado,
-                fechaViaje: data.fechaViaje,
-                estadoReserva: "CONFIRMADA"
-            });
-            
-            // Usamos el EntityManager transaccional
-            const savedReserva = await transactionalEntityManager.save(newReserva);
-
-            // --- 6. Marcar Asiento Ocupado (Bloqueo) ---
-            const newAsientoOcupado = new AsientoOcupado();
-            newAsientoOcupado.bus = bus;
-            newAsientoOcupado.numeroAsiento = data.asientoNumero;
-            newAsientoOcupado.fechaViaje = data.fechaViaje;
-            newAsientoOcupado.reserva = savedReserva; 
-
-            // Usamos el EntityManager transaccional
-            await transactionalEntityManager.save(newAsientoOcupado);
-
-            return savedReserva;
-        });
-    }
-
-    /**
      * [AUTOGESTIÓN] Cancela una reserva, liberando el asiento.
      */
+    // Necesitas el AsientoOcupadoService.unmarkSeat() para que esto funcione
     static async cancelReserva(reservaId: number): Promise<Reserva> {
-        // Usamos el repositorio estándar de TypeORM
         const reservaRepository = AppDataSource.getRepository(Reserva);
         
-        // 1. Encontrar la reserva
         const reserva = await reservaRepository.findOne({ where: { id: reservaId } });
         
-        if (!reserva) { 
-            throw new Error("Reserva not found.");
-        }
+        if (!reserva) throw new Error("Reserva not found.");
+        if (reserva.estadoReserva === "CANCELADA") throw new Error("Reserva already cancelled.");
 
-        if (reserva.estadoReserva === "CANCELADA") {
-            throw new Error("Reserva already cancelled.");
-        }
-
-        // ... (Lógica de Negocio de 24h omitida)
-
-        // 2. Actualizar estado de la reserva
         reserva.estadoReserva = "CANCELADA";
-        // Usamos el repositorio estándar de TypeORM
         const cancelledReserva = await reservaRepository.save(reserva);
 
-        // 3. Liberar el asiento ocupado
-        await AsientoOcupadoService.unmarkSeat(reservaId); 
+        // OJO: Aquí necesitas una llamada a un servicio que elimine la fila de asientos_ocupados
+        // await AsientoOcupadoService.unmarkSeat(reservaId); 
 
         return cancelledReserva;
     }

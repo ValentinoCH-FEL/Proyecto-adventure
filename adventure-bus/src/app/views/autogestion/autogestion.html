@@ -1,1 +1,81 @@
-<p>autogestion works!</p>
+<div class="autogestion-container">
+  
+  <div class="content-card">
+    
+    <h1 class="title">Autogestión de Reserva</h1>
+
+    <!-- FORMULARIO DE BÚSQUEDA (El ngSubmit llama a buscarReserva()) -->
+    <div class="search-form-wrapper" *ngIf="!reservaEncontrada">
+      <p class="subtitle">Ingresa tu código y correo para acceder a los detalles del pasaje.</p>
+      
+      <!-- Usamos ngSubmit en el formulario para capturar el envío -->
+      <form (ngSubmit)="buscarReserva()">
+        <div class="form-group">
+          <label for="codigo">Código de Reserva</label>
+          <input type="text" id="codigo" [(ngModel)]="codigoBusqueda" name="codigo" placeholder="Ej: ADV-123456" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="email">Correo Electrónico</label>
+          <input type="email" id="email" [(ngModel)]="emailBusqueda" name="email" placeholder="ejemplo@correo.com" required>
+        </div>
+        
+        <div class="error-box" *ngIf="mensajeError">
+          {{ mensajeError }}
+        </div>
+
+        <button type="submit" class="btn-primary" [disabled]="cargando">
+          <span *ngIf="!cargando">Buscar Reserva</span>
+          <span *ngIf="cargando">Cargando... 🔄</span>
+        </button>
+      </form>
+    </div>
+
+    <!-- RESULTADOS DE LA RESERVA (Se muestra si se encuentra) -->
+    <div class="results-wrapper" *ngIf="reservaEncontrada">
+      
+      <h2 class="result-title">Detalles de la Reserva: {{ reservaEncontrada.codigoReserva }}</h2>
+      
+      <div class="details-grid">
+        <div class="detail-item">
+          <span class="label">Ruta</span>
+          <span class="value">{{ reservaEncontrada.bus.rutaOrigen }} ➝ {{ reservaEncontrada.bus.rutaDestino }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="label">Fecha / Hora</span>
+          <span class="value">{{ reservaEncontrada.fechaViaje | date:'shortDate' }} • {{ reservaEncontrada.bus.horaSalida }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="label">Pasajero</span>
+          <span class="value">{{ reservaEncontrada.pasajero.nombres }} {{ reservaEncontrada.pasajero.apellidoPaterno }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="label">Asiento</span>
+          <span class="value highlight">{{ reservaEncontrada.asientoNumero }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="label">Estado Actual</span>
+          <span class="value status {{ reservaEncontrada.estadoReserva | lowercase }}">
+            {{ reservaEncontrada.estadoReserva }}
+          </span>
+        </div>
+        <div class="detail-item">
+          <span class="label">Total Pagado</span>
+          <span class="value">S/ {{ reservaEncontrada.precioPagado | number:'1.2-2' }}</span>
+        </div>
+      </div>
+      
+      <div class="actions">
+        <button class="btn-cancel" *ngIf="puedeCancelar" (click)="cancelarReserva()" [disabled]="cargando">
+          <span *ngIf="!cargando">❌ Cancelar Reserva</span>
+          <span *ngIf="cargando">Procesando cancelación...</span>
+        </button>
+        <button class="btn-secondary" (click)="nuevaBusqueda()">
+          Volver a buscar
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+</div>

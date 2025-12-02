@@ -1,0 +1,139 @@
+$primary: #011638;
+$success: #28a745; // Verde éxito
+$accent: #fca311;  // Amarillo/Naranja botón
+$bg-light: #f4f7f6;
+$text-color: #333;
+
+.confirmation-container {
+  min-height: 100vh;
+  background-color: $bg-light;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px;
+  font-family: 'Segoe UI', Roboto, sans-serif;
+}
+
+.ticket-card {
+  background: white;
+  width: 100%;
+  max-width: 500px; // Ancho controlado como un recibo
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+  padding: 40px;
+  text-align: center;
+  animation: slideUp 0.5s ease-out;
+
+  // Animación de entrada suave
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
+
+// ICONO VERDE
+.success-icon {
+  margin-bottom: 20px;
+  
+  .check-circle {
+    width: 60px;
+    height: 60px;
+    background-color: transparent;
+    border: 4px solid $success;
+    color: $success;
+    border-radius: 50%;
+    font-size: 30px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+  }
+}
+
+.title {
+  color: $primary;
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+.subtitle {
+  color: #666;
+  font-size: 0.95rem;
+  margin-bottom: 30px;
+  line-height: 1.5;
+}
+
+// CAJA GRIS DE DETALLES
+.ticket-details {
+  background-color: #f8f9fa; // Fondo gris claro
+  border-radius: 8px;
+  padding: 25px;
+  text-align: left;
+  margin-bottom: 30px;
+
+  .detail-row {
+    display: flex;
+    justify-content: space-between; // Alinea etiqueta izq, valor der
+    margin-bottom: 12px;
+    font-size: 0.95rem;
+
+    &:last-child { margin-bottom: 0; }
+
+    .label {
+      color: #666;
+      font-weight: 600;
+    }
+
+    .value {
+      color: $primary;
+      font-weight: 700;
+      text-align: right;
+      
+      &.highlight {
+        color: #d32f2f; // Color rojizo para el código de reserva
+        font-size: 1rem;
+      }
+    }
+  }
+}
+
+// SECCIÓN QR
+.qr-section {
+  margin-bottom: 30px;
+  
+  img {
+    width: 150px;
+    height: 150px;
+    border: 1px solid #eee;
+    padding: 10px;
+    border-radius: 8px;
+  }
+
+  .qr-help {
+    font-size: 0.8rem;
+    color: #888;
+    margin-top: 10px;
+  }
+}
+
+// BOTÓN AMARILLO
+.btn-home {
+  background-color: $accent; // Color amarillo/naranja de tu imagen
+  color: $primary; // Texto oscuro para contraste
+  font-weight: 700;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  width: 100%; // Botón ancho
+
+  &:hover {
+    background-color: darken($accent, 10%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(252, 163, 17, 0.3);
+  }
+}

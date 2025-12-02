@@ -1,8 +1,4 @@
-// src/modulos/Bus.entity.ts
-
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
-// Asegúrate de que los archivos de las entidades Reserva y AsientoOcupado existan
-// y terminen en .ts, .js o .entity.ts, según tu configuración de tsconfig.json.
 import { Reserva } from "./Reserva.entity"; 
 import { AsientoOcupado } from "./AsientoOcupado.entity";
 
@@ -38,12 +34,21 @@ export class Bus {
     @Column({ length: 50, nullable: false })
     tipoServicio!: string; // Suite, Evolution, Clásico
 
-    // RELACIONES: Se utiliza la función de flecha () => Clase para TypeORM 
-    // y se asegura que el tipo sea un array de la entidad.
+    // ===================================================================
+    // RELACIONES CON CASCADA (Corrección para poder ELIMINAR buses)
+    // ===================================================================
     
-    @OneToMany(() => Reserva, reserva => reserva.bus)
-    reservas!: Reserva[]; // <- Dependencia: Reserva.entity.ts
+    // Si borras el Bus, se borran sus reservas automáticamente
+    @OneToMany(() => Reserva, reserva => reserva.bus, { 
+        cascade: true, 
+        onDelete: 'CASCADE' 
+    })
+    reservas!: Reserva[];
 
-    @OneToMany(() => AsientoOcupado, asientoOcupado => asientoOcupado.bus)
-    asientosOcupados!: AsientoOcupado[]; // <- Dependencia: AsientoOcupado.entity.ts
+    // Si borras el Bus, se limpia el historial de asientos ocupados
+    @OneToMany(() => AsientoOcupado, asientoOcupado => asientoOcupado.bus, { 
+        cascade: true, 
+        onDelete: 'CASCADE' 
+    })
+    asientosOcupados!: AsientoOcupado[];
 }

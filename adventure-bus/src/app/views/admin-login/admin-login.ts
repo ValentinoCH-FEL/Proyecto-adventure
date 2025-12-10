@@ -1,7 +1,7 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core'; // 1. Importamos ChangeDetectorRef
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router'; // 1. Importamos RouterModule
+import { Router, RouterModule } from '@angular/router'; 
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -10,7 +10,7 @@ import { AuthService } from '../../services/auth.service';
   imports: [
     CommonModule, 
     FormsModule,
-    RouterModule // 2. Agregamos RouterModule aquí para que routerLink funcione
+    RouterModule 
   ],
   templateUrl: './admin-login.html',
   styleUrls: ['./admin-login.scss']
@@ -18,9 +18,10 @@ import { AuthService } from '../../services/auth.service';
 export class AdminLoginComponent implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef); // 2. Inyectamos el detector de cambios
 
   credentials = {
-    username: '', // En tu BD es 'usuario'
+    username: '', 
     password: ''
   };
 
@@ -28,7 +29,6 @@ export class AdminLoginComponent implements OnInit {
   error: string = '';
 
   ngOnInit() {
-    // Si ya está logueado, lo mandamos al panel
     if (this.authService.hasToken()) {
       this.router.navigate(['/panel-administrador']);
     }
@@ -38,31 +38,38 @@ export class AdminLoginComponent implements OnInit {
     this.loading = true;
     this.error = '';
 
-    // NOTA: Tu backend espera 'usuario' y 'contraseña' o similar.
-    // Ajusta la estructura del objeto que envías si es diferente.
     const loginData = {
-        usuario: this.credentials.username, 
+        usuario: this.credentials.username.trim(), 
         password: this.credentials.password
     };
 
-
     this.authService.login(loginData).subscribe({
       next: (response: any) => {
-        this.loading = false;
+        // Lógica de éxito
+        this.loading = false; 
         
-        // El servicio devuelve el objeto de respuesta o un error
         if (response.token) {
-          alert("✅ Acceso concedido.");
           this.router.navigate(['/panel-administrador']);
         } else {
-          // Si llega un error de backend sin token
-          this.error = "Credenciales inválidas o error de servidor.";
+          this.error = "No se recibió un token válido.";
         }
+
+        // 3. ¡LA SOLUCIÓN! Forzamos a Angular a pintar la vista ahora mismo
+        this.cdr.detectChanges(); 
       },
       error: (err) => {
+        // Lógica de error
         this.loading = false;
-        this.error = "Error de conexión o credenciales incorrectas. Intenta de nuevo.";
         console.error("Login API Error:", err);
+        
+        if (err.status === 401 || err.status === 403) {
+           this.error = "Usuario o contraseña incorrectos.";
+        } else {
+           this.error = "Error de conexión. Intenta más tarde.";
+        }
+
+        // 3. También forzamos la actualización aquí por si falla
+        this.cdr.detectChanges(); 
       }
     });
   }

@@ -1,57 +1,110 @@
-<div class="confirmation-container" *ngIf="datosViaje">
+<div class="confirmation-container" *ngIf="datosCompra">
   
-  <div class="ticket-card">
-    
-    <!-- ICONO DE ÉXITO -->
-    <div class="success-icon">
-      <div class="check-circle">✓</div>
+  <!-- BANNER DE ÉXITO -->
+  <div class="success-banner">
+    <div class="icon-circle">
+      <span class="check-icon">✓</span>
     </div>
-
-    <h1 class="title">¡Compra realizada con éxito!</h1>
-    <p class="subtitle">
-      Tu reserva ha sido procesada correctamente. <br>
-      Hemos enviado este boleto a: <strong>{{ emailUsuario }}</strong>
+    <h1>¡Compra realizada con éxito!</h1>
+    <p>Tu reserva ha sido procesada correctamente.<br>
+       Hemos enviado los boletos a: <strong>{{ datosCompra.reservas[0].pasajero.correoElectronico }}</strong>
     </p>
-
-    <!-- DETALLES DEL TICKET -->
-    <div class="ticket-details">
-      <div class="detail-row">
-        <span class="label">Número de reserva:</span>
-        <span class="value highlight">{{ codigoReserva }}</span>
-      </div>
-      
-      <div class="detail-row">
-        <span class="label">Destino:</span>
-        <span class="value">{{ datosViaje.bus.rutaDestino }}</span>
-      </div>
-
-      <div class="detail-row">
-        <span class="label">Salida:</span>
-        <span class="value">{{ datosViaje.bus.rutaOrigen }}</span>
-      </div>
-
-      <div class="detail-row">
-        <span class="label">Fecha:</span>
-        <span class="value">{{ datosViaje.fecha }} - {{ datosViaje.bus.horaSalida }}</span>
-      </div>
-
-      <div class="detail-row">
-        <span class="label">Pasajeros:</span>
-        <span class="value">{{ datosViaje.pasajeros.length }} persona(s)</span>
-      </div>
-    </div>
-
-    <!-- CÓDIGO QR -->
-    <div class="qr-section">
-      <img [src]="qrUrl" alt="Código QR de Reserva">
-      <p class="qr-help">Presenta este código al abordar o úsalo en "Autogestión" para cambios.</p>
-    </div>
-
-    <!-- BOTÓN -->
-    <button class="btn-home" (click)="volverAlInicio()">
-      Volver al inicio
-    </button>
-
   </div>
 
+  <!-- TARJETA TIPO TICKET -->
+  <div class="ticket-card" id="printable-area">
+    
+    <div class="ticket-header">
+      <div class="logo">Adventure Bus</div>
+      <div class="order-id">
+        RESERVA #{{ datosCompra.reservas[0].codigoReserva.split('-')[1] }}
+      </div>
+    </div>
+
+    <div class="ticket-body">
+      
+      <!-- DETALLES DEL VIAJE -->
+      <div class="trip-segment">
+        <div class="route">
+          <span class="city">{{ datosCompra.reservas[0].bus.rutaOrigen }}</span>
+          <span class="arrow">➝</span>
+          <span class="city">{{ datosCompra.reservas[0].bus.rutaDestino }}</span>
+        </div>
+        
+        <div class="date-time">
+          <div class="info-box">
+            <span class="label">FECHA</span>
+            <span class="val">{{ datosCompra.reservas[0].fechaViaje | date:'dd/MM/yyyy' }}</span>
+          </div>
+          <div class="info-box">
+            <span class="label">HORA</span>
+            <span class="val">{{ datosCompra.reservas[0].bus.horaSalida }}</span>
+          </div>
+          <div class="info-box">
+            <span class="label">SERVICIO</span>
+            <span class="val">{{ datosCompra.reservas[0].bus.tipoServicio }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- LISTA DE PASAJEROS -->
+      <div class="passengers-section">
+        <h4>Pasajeros y Asientos ({{ datosCompra.reservas.length }})</h4>
+        
+        <div class="passenger-row header">
+          <span>Pasajero</span>
+          <span>Documento</span>
+          <span class="text-right">Asiento</span>
+        </div>
+        
+        <div class="passenger-row" *ngFor="let reserva of datosCompra.reservas">
+          <span class="name">{{ reserva.pasajero.nombres }} {{ reserva.pasajero.apellidoPaterno }}</span>
+          <span class="doc">{{ reserva.pasajero.tipoDocumento }} {{ reserva.pasajero.numeroDocumento }}</span>
+          <span class="seat-badge">#{{ reserva.asientoNumero }}</span>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- CÓDIGO QR DINÁMICO -->
+      <div class="qr-section">
+        <div class="qr-box">
+          <!-- Genera un QR real con el código de la primera reserva -->
+          <img [src]="'https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=' + datosCompra.reservas[0].codigoReserva" 
+               alt="Código QR de Reserva">
+        </div>
+        <div class="qr-help">
+          <p>Presenta este código al abordar.</p>
+          <small>Código principal: {{ datosCompra.reservas[0].codigoReserva }}</small>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="ticket-footer">
+      <div class="total-paid">
+        <span>Total Pagado</span>
+        <strong>S/ {{ datosCompra.reservas.length * datosCompra.reservas[0].precioPagado | number:'1.2-2' }}</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTONES DE ACCIÓN -->
+  <div class="actions">
+    <button class="btn-print" (click)="imprimirVoucher()">
+      🖨️ Imprimir Boleto
+    </button>
+    <button class="btn-home" (click)="volverAlInicio()">
+      Volver al Inicio
+    </button>
+  </div>
+
+</div>
+
+<!-- ESTADO DE CARGA O ERROR -->
+<div class="error-container" *ngIf="!datosCompra">
+  <div class="loader"></div>
+  <p>Cargando confirmación...</p>
 </div>

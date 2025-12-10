@@ -1,142 +1,227 @@
 <div class="checkout-container">
   
+  <!-- MODAL DE TIEMPO AGOTADO -->
   <div class="expired-overlay" *ngIf="isExpired()">
     <div class="expired-modal">
-      <div class="icon">⏳</div>
-      <h2>Tiempo agotado</h2>
-      <p>El tiempo de reserva de tus asientos ha finalizado.</p>
-      <button class="btn-primary" (click)="reiniciarProceso()">Volver a buscar</button>
+      <div class="modal-icon">⏳</div>
+      <h2>¡Tiempo Agotado!</h2>
+      <p>Tu reserva temporal ha expirado. Los asientos han sido liberados para otros usuarios.</p>
+      <button class="btn-primary" (click)="reiniciarProceso()">Volver a Buscar</button>
     </div>
   </div>
 
+  <!-- COLUMNA IZQUIERDA: DATOS -->
   <div class="main-column" *ngIf="reservaData">
     
-    <h2 class="page-title">¿Quiénes viajan?</h2>
-    <p class="subtitle">Complete los datos de los {{ pasajeros.length }} pasajero(s).</p>
+    <header class="page-header">
+      <h2 class="page-title">¿Quiénes viajan?</h2>
+      <p class="subtitle">Completa los datos de los {{ pasajeros.length }} pasajero(s) para asegurar tu reserva.</p>
+    </header>
 
-    <div class="passenger-card" *ngFor="let p of pasajeros; let i = index">
+    <form #passengerForm="ngForm" autocomplete="off">
       
-      <div class="card-header">
-        <h3>Pasajero {{ i + 1 }} <span class="badge">Adulto</span></h3>
-        <div class="seat-info">
-          Asiento: <strong>{{ p.asientoNumero }}</strong> (Piso {{ p.piso }})
-        </div>
-      </div>
-
-      <div class="card-body">
+      <div class="passenger-card" *ngFor="let p of pasajeros; let i = index">
         
-        <div class="form-row">
-          <div class="form-group col-md-4">
-            <label>Tipo Documento</label>
-            <select [(ngModel)]="p.tipoDocumento" name="tipoDoc{{i}}" class="form-control">
-              <option *ngFor="let doc of tiposDocumento" [value]="doc.valor">{{ doc.texto }}</option>
-            </select>
+        <div class="card-header">
+          <div class="header-left">
+            <span class="pax-icon">👤</span>
+            <h3>Pasajero {{ i + 1 }} <span class="badge">Adulto</span></h3>
           </div>
-          <div class="form-group col-md-8">
-            <label>Número de documento <span class="req">*</span></label>
-            <input type="text" [(ngModel)]="p.numeroDocumento" #docRef="ngModel" required minlength="8" pattern="^[0-9A-Za-z]+$"
-                   class="form-control" [class.is-invalid]="isFieldInvalid(docRef)" placeholder="Nro. Documento">
-            <div class="error-feedback" *ngIf="isFieldInvalid(docRef)">
-              <span *ngIf="docRef.errors?.['required']">Requerido</span>
-              <span *ngIf="docRef.errors?.['minlength']">Mínimo 8 caracteres</span>
+          <div class="seat-badge">
+            Asiento <strong>{{ p.asientoNumero }}</strong> <span class="floor-info">(Piso {{ p.piso }})</span>
+          </div>
+        </div>
+
+        <div class="card-body">
+          
+          <!-- FILA 1: DOCUMENTO -->
+          <div class="form-grid two-cols-small">
+            <div class="form-group">
+              <label>Tipo de Documento</label>
+              <div class="input-wrapper">
+                <span class="input-icon">🪪</span>
+                <select [(ngModel)]="p.tipoDocumento" name="tipoDoc{{i}}" class="form-control select-input">
+                  <option *ngFor="let doc of tiposDocumento" [value]="doc.valor">{{ doc.texto }}</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Número de Documento <span class="req">*</span></label>
+              <div class="input-wrapper">
+                <span class="input-icon">#</span>
+                <input type="text" [(ngModel)]="p.numeroDocumento" #docRef="ngModel" name="numDoc{{i}}"
+                       required [minlength]="p.tipoDocumento === 'DNI' ? 8 : 6" [maxlength]="p.tipoDocumento === 'DNI' ? 8 : 12"
+                       pattern="^[0-9A-Za-z]+$"
+                       class="form-control" [class.is-invalid]="isFieldInvalid(docRef)" 
+                       placeholder="Ingresa el número">
+              </div>
+              <div class="error-message" *ngIf="isFieldInvalid(docRef)">
+                <span *ngIf="docRef.errors?.['required']">Dato requerido</span>
+                <span *ngIf="docRef.errors?.['minlength']">Faltan dígitos</span>
+                <span *ngIf="docRef.errors?.['pattern']">Caracteres inválidos</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="form-row">
-          <div class="form-group col-md-6">
-            <label>Nombres <span class="req">*</span></label>
-            <input type="text" [(ngModel)]="p.nombres" #nomRef="ngModel" required pattern="^[a-zA-Z\s]+$"
-                   class="form-control" [class.is-invalid]="isFieldInvalid(nomRef)" placeholder="Nombres completos">
-             <div class="error-feedback" *ngIf="isFieldInvalid(nomRef)">Solo letras permitidas</div>
-          </div>
-          <div class="form-group col-md-6">
-            <label>Apellido Paterno <span class="req">*</span></label>
-            <input type="text" [(ngModel)]="p.apellidoPaterno" #apePRef="ngModel" required pattern="^[a-zA-Z\s]+$"
-                   class="form-control" [class.is-invalid]="isFieldInvalid(apePRef)" placeholder="Apellido paterno">
-          </div>
-        </div>
+          <!-- FILA 2: NOMBRES -->
+          <div class="form-grid two-cols">
+            <div class="form-group">
+              <label>Nombres <span class="req">*</span></label>
+              <div class="input-wrapper">
+                <span class="input-icon">Aa</span>
+                <input type="text" [(ngModel)]="p.nombres" #nomRef="ngModel" name="nombres{{i}}"
+                       required pattern="^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$"
+                       class="form-control" [class.is-invalid]="isFieldInvalid(nomRef)" 
+                       placeholder="Como figura en el DNI">
+              </div>
+              <div class="error-message" *ngIf="isFieldInvalid(nomRef)">Ingresa un nombre válido</div>
+            </div>
 
-        <div class="form-row">
-          <div class="form-group col-md-6">
-            <label>Apellido Materno</label>
-            <input type="text" [(ngModel)]="p.apellidoMaterno" class="form-control" placeholder="Apellido materno">
+            <div class="form-group">
+              <label>Apellidos <span class="req">*</span></label>
+              <div class="input-wrapper">
+                <span class="input-icon">Aa</span>
+                <input type="text" [(ngModel)]="p.apellidoPaterno" #apeRef="ngModel" name="apellidos{{i}}"
+                       required pattern="^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$"
+                       class="form-control" [class.is-invalid]="isFieldInvalid(apeRef)" 
+                       placeholder="Paterno y Materno">
+              </div>
+              <div class="error-message" *ngIf="isFieldInvalid(apeRef)">Ingresa apellidos válidos</div>
+            </div>
           </div>
-          <div class="form-group col-md-6">
-            <label>Correo electrónico <span class="req">*</span></label>
-            <input type="email" [(ngModel)]="p.correoElectronico" #emailRef="ngModel" required email
-                   class="form-control" [class.is-invalid]="isFieldInvalid(emailRef)" placeholder="ejemplo@correo.com">
-            <div class="error-feedback" *ngIf="isFieldInvalid(emailRef)">Correo inválido</div>
-          </div>
-        </div>
 
-        <div class="form-row three-cols">
-          <div class="form-group">
-            <label>F. Nacimiento <span class="req">*</span></label>
-            <input type="date" [(ngModel)]="p.fechaNacimiento" #dateRef="ngModel" required
-                   class="form-control" [class.is-invalid]="isFieldInvalid(dateRef)">
-          </div>
-          <div class="form-group">
-            <label>Nacionalidad</label>
-            <select [(ngModel)]="p.nacionalidad" class="form-control">
-              <option *ngFor="let nac of nacionalidades" [value]="nac">{{ nac }}</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Género</label>
-            <select [(ngModel)]="p.genero" class="form-control">
-              <option value="">Seleccione</option>
-              <option *ngFor="let g of generos" [value]="g.valor">{{ g.texto }}</option>
-            </select>
-          </div>
-        </div>
+          <!-- FILA 3: DATOS PERSONALES -->
+          <div class="form-grid three-cols">
+            <div class="form-group">
+              <label>F. Nacimiento <span class="req">*</span></label>
+              <div class="input-wrapper">
+                <input type="date" [(ngModel)]="p.fechaNacimiento" #dateRef="ngModel" name="fechaNac{{i}}"
+                       required class="form-control" [class.is-invalid]="isFieldInvalid(dateRef)">
+              </div>
+            </div>
 
+            <div class="form-group">
+              <label>Nacionalidad</label>
+              <div class="input-wrapper">
+                <span class="input-icon">🌍</span>
+                <select [(ngModel)]="p.nacionalidad" name="nacionalidad{{i}}" class="form-control select-input">
+                  <option *ngFor="let nac of nacionalidades" [value]="nac">{{ nac }}</option>
+                </select>
+              </div>
+              <!-- AVISO INTELIGENTE: SOLO SI ELIGE 'OTRA' -->
+              <div class="warning-note" *ngIf="p.nacionalidad === 'Otra'">
+                ℹ️ Recuerda llevar tu <strong>Pasaporte</strong> vigente.
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Género <span class="req">*</span></label>
+              <div class="input-wrapper">
+                <span class="input-icon">⚧</span>
+                <select [(ngModel)]="p.genero" #genRef="ngModel" name="genero{{i}}" 
+                        required class="form-control select-input" [class.is-invalid]="isFieldInvalid(genRef)">
+                  <option value="">Elegir</option>
+                  <option *ngFor="let g of generos" [value]="g.valor">{{ g.texto }}</option>
+                </select>
+              </div>
+              <!-- MENSAJE DE ERROR SI NO SELECCIONA -->
+              <div class="error-message" *ngIf="isFieldInvalid(genRef)">Selecciona una opción</div>
+            </div>
+          </div>
+
+          <!-- FILA 4: CONTACTO -->
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Correo Electrónico <span class="req">*</span> <small class="text-muted">(Para enviar el boleto)</small></label>
+              <div class="input-wrapper">
+                <span class="input-icon">✉️</span>
+                <input type="email" [(ngModel)]="p.correoElectronico" #emailRef="ngModel" name="email{{i}}"
+                       required email
+                       class="form-control" [class.is-invalid]="isFieldInvalid(emailRef)" 
+                       placeholder="ejemplo@correo.com">
+                
+                <!-- BOTÓN COPIAR CORREO -->
+                <button *ngIf="i === 0 && pasajeros.length > 1" 
+                        type="button" class="btn-copy-email" 
+                        (click)="copiarEmailATodos()" 
+                        title="Usar este correo para todos los pasajeros">
+                  Copiar a todos
+                </button>
+              </div>
+              <div class="error-message" *ngIf="isFieldInvalid(emailRef)">Formato de correo incorrecto</div>
+            </div>
+          </div>
+
+        </div>
       </div>
-    </div>
+    </form>
 
-    <div class="alert-info">
-      ℹ️ Recuerda presentar tu documento de identidad original al abordar el bus.
+    <div class="info-box">
+      <span class="icon">🛡️</span>
+      <p>Tus datos están protegidos. Al continuar, aceptas nuestros términos y condiciones de servicio.</p>
     </div>
 
   </div>
 
+  <!-- COLUMNA DERECHA: RESUMEN STICKY -->
   <div class="sidebar-column" *ngIf="reservaData">
     <div class="summary-card">
       
-      <div class="timer-box" [class.danger]="timeLeft() < 120">
-        <span class="timer-label">Tiempo restante</span>
-        <span class="timer-value">{{ formattedTime() }}</span>
-      </div>
-
-      <h3>Detalles del pago</h3>
-      
-      <div class="total-price">
-        <span>Total a pagar:</span>
-        <strong>S/ {{ reservaData.total | number:'1.2-2' }}</strong>
-      </div>
-
-      <div class="divider"></div>
-
-      <div class="detail-list">
-        <h4>Pasajeros</h4>
-        <div class="item" *ngFor="let p of pasajeros; let i = index">
-          <span>Pasajero {{ i + 1 }}</span>
-          <span>S/ {{ p.precio | number:'1.2-2' }}</span>
+      <!-- TIMER ANIMADO -->
+      <div class="timer-container" [class.critical]="timeLeft() < 120">
+        <span class="timer-icon">⏱️</span>
+        <div class="timer-info">
+          <span class="label">Tiempo restante</span>
+          <span class="value">{{ formattedTime() }}</span>
         </div>
       </div>
 
-      <div class="divider"></div>
+      <div class="summary-header">
+        <h3>Resumen de Pago</h3>
+      </div>
+      
+      <div class="summary-body">
+        <div class="price-row total">
+          <span>Total a Pagar</span>
+          <span class="amount">S/ {{ reservaData.total | number:'1.2-2' }}</span>
+        </div>
 
-      <div class="trip-details">
-        <h4>Tu Viaje</h4>
-        <p class="route">{{ reservaData.bus.rutaOrigen }} ➝ {{ reservaData.bus.rutaDestino }}</p>
-        <p class="date">📅 {{ reservaData.fecha }} • 🕒 {{ reservaData.bus.horaSalida }}</p>
-        <p class="bus-type">🚌 {{ reservaData.bus.modelo }}</p>
+        <div class="divider"></div>
+
+        <div class="detail-section">
+          <h4>Itinerario</h4>
+          <div class="route-line">
+            <span class="point origin">{{ reservaData.bus.rutaOrigen }}</span>
+            <span class="arrow">➝</span>
+            <span class="point dest">{{ reservaData.bus.rutaDestino }}</span>
+          </div>
+          <div class="trip-date">
+            📅 {{ reservaData.fechaViaje | date:'fullDate' }}
+            <br>
+            🕒 {{ reservaData.bus.horaSalida }}
+          </div>
+          <div class="bus-badge">🚌 {{ reservaData.bus.modelo }}</div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="detail-section">
+          <h4>Asientos ({{ pasajeros.length }})</h4>
+          <ul class="seats-list">
+            <li *ngFor="let p of pasajeros">
+               <span>Pasajero {{ pasajeros.indexOf(p) + 1 }} - Asiento {{ p.asientoNumero }}</span>
+               <span class="price-tag">S/ {{ p.precio | number:'1.2-2' }}</span>
+            </li>
+          </ul>
+        </div>
       </div>
 
-      <button class="btn-next" (click)="procesarYContinuar()" [disabled]="isExpired()">
-        Continuar al Pago
-      </button>
+      <div class="summary-footer">
+        <button class="btn-checkout" (click)="procesarYContinuar()" [disabled]="isExpired()">
+          IR A PAGAR 
+        </button>
+      </div>
     </div>
   </div>
 

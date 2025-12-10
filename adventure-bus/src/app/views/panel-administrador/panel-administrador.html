@@ -1,125 +1,174 @@
-<div class="admin-dashboard-simple">
+<div class="admin-layout">
   
-  <header class="admin-header">
-    <div class="header-content">
-      <div class="logo-admin">🚌 Administración de Flota</div>
-      <button class="btn-logout" (click)="logout()">Cerrar Sesión</button>
+  <header class="top-bar">
+    <div class="brand-section">
+      <div class="logo-icon">🚍</div>
+      <div>
+        <h1 class="app-name">AdminConsole</h1>
+        <span class="module-name">Gestión de Flota</span>
+      </div>
     </div>
+    
+    <button class="btn-logout" (click)="logout()">
+      <span>Cerrar Sesión</span>
+      <i class="icon-exit">➔</i>
+    </button>
   </header>
 
-  <main class="main-content-area">
-    <div class="bus-management">
-        
-        <div class="bus-form-section">
-          <h2>
-            {{ esModoEdicion ? '✏️ Editando Bus #' + busActual.id : '➕ Agregar Nuevo Bus' }}
-          </h2>
-          
-          <form (ngSubmit)="guardarBus()" #formBus="ngForm">
-            <div class="form-grid">
-                
-                <div class="form-group col-md-4">
-                    <label>Placa</label>
-                    <input type="text" [(ngModel)]="busActual.placa" name="placa" required placeholder="ABC-123">
-                </div>
-                <div class="form-group col-md-4">
-                    <label>Modelo</label>
-                    <input type="text" [(ngModel)]="busActual.modelo" name="modelo" required placeholder="Volvo 9700">
-                </div>
-                <div class="form-group col-md-4">
-                    <label>Capacidad</label>
-                    <input type="number" [(ngModel)]="busActual.capacidadTotal" name="capacidad" required min="10" max="80">
-                </div>
-                <div class="form-group col-md-4">
-                    <label>Servicio</label>
-                    <select [(ngModel)]="busActual.tipoServicio" name="servicio" required>
-                      <option *ngFor="let tipo of tiposServicio" [value]="tipo">{{ tipo }}</option>
-                    </select>
-                </div>
-
-                <div class="form-group col-md-6">
-                    <label>Origen</label>
-                    <input type="text" [(ngModel)]="busActual.rutaOrigen" name="origen" required>
-                </div>
-                <div class="form-group col-md-6">
-                    <label>Destino</label>
-                    <input type="text" [(ngModel)]="busActual.rutaDestino" name="destino" required>
-                </div>
-
-                <div class="form-group col-md-4">
-                    <label>Hora Salida</label>
-                    <input type="time" [(ngModel)]="busActual.horaSalida" name="hora" required>
-                </div>
-                <div class="form-group col-md-4">
-                    <label>Tarifa (S/)</label>
-                    <input type="number" [(ngModel)]="busActual.tarifaBase" name="tarifa" required min="0">
-                </div>
-                <div class="form-group col-md-4">
-                    <label>Estado</label>
-                    <select [(ngModel)]="busActual.estadoActivo" name="estado" required>
-                        <option [ngValue]="true">🟢 Activo</option>
-                        <option [ngValue]="false">🔴 Inactivo</option>
-                    </select>
-                </div>
-
-            </div>
-            
-            <div class="form-actions">
-                <button type="submit" class="btn-save" [disabled]="!formBus.form.valid || cargando">
-                  {{ cargando ? 'Guardando...' : 'Guardar Datos' }}
-                </button>
-                
-                <button type="button" class="btn-cancel" *ngIf="esModoEdicion" (click)="cancelarEdicion()">
-                  Cancelar Edición
-                </button>
-            </div>
-            
-            <p class="error-msg" *ngIf="error">⚠️ {{ error }}</p>
-          </form>
+  <main class="content-wrapper">
+    
+    <section class="card-section form-card">
+      <div class="card-header">
+        <div class="icon-header">{{ esModoEdicion ? '✏️' : '✨' }}</div>
+        <div>
+          <h2>{{ esModoEdicion ? 'Editar Autobús #' + busActual.id : 'Registrar Nuevo Bus' }}</h2>
+          <p class="subtitle">Complete la información técnica de la unidad.</p>
         </div>
-        
-        <div class="divider"></div>
+      </div>
 
-        <div class="bus-list-section">
-          <div class="header-tabla">
-            <h2>Lista de Buses ({{ buses.length }})</h2>
+      <form (ngSubmit)="guardarBus()" #formBus="ngForm" autocomplete="off">
+        <div class="smart-grid">
+          
+          <div class="form-group">
+            <label>Placa / Matrícula</label>
+            <input type="text" [(ngModel)]="busActual.placa" name="placa" class="form-control" placeholder="Ej. ABC-123" required>
           </div>
 
-          <table class="bus-table">
-            <thead>
-              <tr>
-                <th>Placa</th>
-                <th>Ruta</th>
-                <th>Hora</th>
-                <th>Servicio</th>
-                <th>Precio</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let bus of buses">
-                <td><strong>{{ bus.placa }}</strong><br><small>{{ bus.modelo }}</small></td>
-                <td>{{ bus.rutaOrigen }} <br>➝ {{ bus.rutaDestino }}</td>
-                <td>{{ bus.horaSalida }}</td>
-                <td><span class="badge-service">{{ bus.tipoServicio }}</span></td>
-                <td>S/ {{ bus.tarifaBase }}</td>
-                <td>
-                  <span class="status-dot" [class.active]="bus.estadoActivo"></span>
-                  {{ bus.estadoActivo ? 'Activo' : 'Inactivo' }}
-                </td>
-                <td class="actions-cell">
-                  <button class="btn-icon edit" (click)="iniciarEdicion(bus)" title="Editar">✏️</button>
-                  <button class="btn-icon delete" (click)="eliminarBus(bus.id)" title="Eliminar">🗑️</button>
-                </td>
-              </tr>
-              <tr *ngIf="buses.length === 0 && !cargando">
-                <td colspan="7" class="empty-state">No hay buses registrados.</td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="form-group">
+            <label>Modelo del Bus</label>
+            <input type="text" [(ngModel)]="busActual.modelo" name="modelo" class="form-control" placeholder="Ej. Volvo 9700" required>
+          </div>
+
+          <div class="form-group">
+            <label>Capacidad</label>
+            <input type="number" [(ngModel)]="busActual.capacidadTotal" name="capacidad" class="form-control" min="10" max="80" required>
+          </div>
+
+          <div class="form-group">
+            <label>Tipo de Servicio</label>
+            <div class="select-wrapper">
+              <select [(ngModel)]="busActual.tipoServicio" name="servicio" class="form-control" required>
+                <option *ngFor="let tipo of tiposServicio" [value]="tipo">{{ tipo }}</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Ciudad Origen</label>
+            <input type="text" [(ngModel)]="busActual.rutaOrigen" name="origen" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label>Ciudad Destino</label>
+            <input type="text" [(ngModel)]="busActual.rutaDestino" name="destino" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label>Hora de Salida</label>
+            <input type="time" [(ngModel)]="busActual.horaSalida" name="hora" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label>Tarifa Base (S/)</label>
+            <div class="input-money">
+              <input type="number" [(ngModel)]="busActual.tarifaBase" name="tarifa" class="form-control" min="0" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Estado Operativo</label>
+            <select [(ngModel)]="busActual.estadoActivo" name="estado" class="form-control" required>
+                <option [ngValue]="true">🟢 Activo (En venta)</option>
+                <option [ngValue]="false">🔴 Inactivo (Mantenimiento)</option>
+            </select>
+          </div>
         </div>
 
-    </div>
+        <div class="alert-box error" *ngIf="error">
+          <span>⚠️ {{ error }}</span>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" *ngIf="esModoEdicion" (click)="cancelarEdicion()">
+            Cancelar
+          </button>
+          
+          <button type="submit" class="btn-primary" [disabled]="!formBus.form.valid || cargando">
+            <span *ngIf="cargando" class="spinner"></span>
+            {{ cargando ? 'Guardando...' : (esModoEdicion ? 'Actualizar Cambios' : 'Registrar Bus') }}
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card-section table-card">
+      <div class="table-header">
+        <h3>Flota Registrada <span class="badge-count">{{ buses.length }}</span></h3>
+      </div>
+
+      <div class="table-responsive">
+        <table class="modern-table">
+          <thead>
+            <tr>
+              <th>Unidad</th>
+              <th>Ruta Asignada</th>
+              <th>Horario</th>
+              <th>Servicio</th>
+              <th>Tarifa</th>
+              <th>Estado</th>
+              <th class="text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let bus of buses">
+              <td>
+                <div class="info-cell">
+                  <span class="primary-text">{{ bus.placa }}</span>
+                  <span class="secondary-text">{{ bus.modelo }}</span>
+                </div>
+              </td>
+              <td>
+                <div class="route-cell">
+                  <span>{{ bus.rutaOrigen }}</span>
+                  <span class="arrow">➝</span>
+                  <span>{{ bus.rutaDestino }}</span>
+                </div>
+              </td>
+              <td>{{ bus.horaSalida }}</td>
+              <td>
+                <span class="badge" 
+                      [ngClass]="{
+                        'badge-blue': bus.tipoServicio === 'Clásico',
+                        'badge-purple': bus.tipoServicio === 'Vip',
+                        'badge-gold': bus.tipoServicio === 'Premium'
+                      }">
+                  {{ bus.tipoServicio }}
+                </span>
+              </td>
+              <td class="price-cell">S/ {{ bus.tarifaBase | number:'1.2-2' }}</td>
+              <td>
+                <span class="status-pill" [class.active]="bus.estadoActivo">
+                  {{ bus.estadoActivo ? 'Disponible' : 'Fuera de Servicio' }}
+                </span>
+              </td>
+              <td class="actions-cell">
+                <button class="btn-icon edit" (click)="iniciarEdicion(bus)" title="Editar">✏️</button>
+                <button class="btn-icon delete" (click)="eliminarBus(bus.id)" title="Eliminar">🗑️</button>
+              </td>
+            </tr>
+            
+            <tr *ngIf="buses.length === 0 && !cargando">
+              <td colspan="7" class="empty-state">
+                <div class="empty-content">
+                  <span class="emoji">🚌</span>
+                  <p>No hay buses registrados en la flota.</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
   </main>
 </div>

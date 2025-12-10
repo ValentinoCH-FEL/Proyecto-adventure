@@ -1,6 +1,7 @@
-import { Component, inject, ChangeDetectorRef } from '@angular/core'; // 1. Importamos ChangeDetectorRef
+import { Component, inject, ChangeDetectorRef } from '@angular/core'; 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router'; // Importante para la navegación
 import { AutogestionService, ReservaDetalle } from '../../services/autogestion.service';
 
 @Component({
@@ -11,8 +12,10 @@ import { AutogestionService, ReservaDetalle } from '../../services/autogestion.s
   styleUrls: ['./autogestion.scss']
 })
 export class AutogestionComponent {
+  // Inyección de dependencias
   private autogestionService = inject(AutogestionService);
-  private cdr = inject(ChangeDetectorRef); // 2. Inyectamos el detector de cambios
+  private cdr = inject(ChangeDetectorRef); // Para actualizar la vista manualmente si es necesario
+  private router = inject(Router); // Para navegar al inicio
 
   // Formulario de búsqueda
   codigoBusqueda: string = '';
@@ -23,13 +26,21 @@ export class AutogestionComponent {
   cargando: boolean = false;
   mensajeError: string = '';
   
-  // Para mostrar el botón de cancelar si es válida
+  // Controla si se muestra el botón de cancelar
   puedeCancelar: boolean = false; 
 
+  // --- MÉTODO PARA VOLVER AL INICIO ---
+  volverInicio() {
+    this.router.navigate(['/']);
+  }
+
+  // --- BUSCAR RESERVA ---
   buscarReserva() {
+    // Reiniciamos estados
     this.reservaEncontrada = null;
     this.mensajeError = '';
     
+    // Validación simple
     if (!this.codigoBusqueda || !this.emailBusqueda) {
       this.mensajeError = "Debes ingresar el código y el correo.";
       return;
@@ -37,53 +48,63 @@ export class AutogestionComponent {
 
     this.cargando = true;
 
-    // --- LLAMADA AL BACKEND ---
+    // Llamada al servicio
     this.autogestionService.buscarReserva(this.codigoBusqueda, this.emailBusqueda)
       .subscribe({
         next: (data) => {
           this.cargando = false;
-          this.reservaEncontrada = data; // Guardamos la reserva encontrada
+          this.reservaEncontrada = data; 
           
+          // Solo permitimos cancelar si está CONFIRMADA
           if (data && data.estadoReserva === 'CONFIRMADA') {
              this.puedeCancelar = true;
           } else {
-             this.mensajeError = `Esta reserva se encuentra en estado: ${data.estadoReserva}.`;
-             this.reservaEncontrada = null;
+             // Si está CANCELADA, mostramos la info pero no dejamos cancelar de nuevo
+             // Opcional: mostrar mensaje informativo
+             if(data.estadoReserva !== 'CONFIRMADA') {
+                this.puedeCancelar = false;
+             }
           }
-          this.cdr.detectChanges(); // <--- SOLUCIÓN: Forzar la actualización visual
+          
+          // Forzamos la detección de cambios para asegurar que la UI se actualice
+          this.cdr.detectChanges(); 
         },
         error: (err) => {
           this.cargando = false;
           
-          // Manejo del Error 404/400 (Reserva no encontrada)
+          // Manejo de errores específicos
           if (err.status === 404 || err.status === 400) {
              this.mensajeError = "Reserva no encontrada o datos de verificación incorrectos. Intenta de nuevo.";
           } else {
              this.mensajeError = "Error de conexión o servidor. Revisa la consola.";
              console.error("Error en la API de autogestión:", err);
           }
+          
           this.reservaEncontrada = null;
-          this.cdr.detectChanges(); // <--- SOLUCIÓN: Forzar actualización del mensaje de error
+          this.cdr.detectChanges(); 
         }
       });
   }
 
+  // --- CANCELAR RESERVA ---
   cancelarReserva() {
     if (!this.reservaEncontrada || !confirm("¿Estás seguro de que deseas cancelar esta reserva? Esta acción es irreversible.")) {
       return;
     }
 
     this.cargando = true;
+
     this.autogestionService.cancelarReserva(this.reservaEncontrada.id)
       .subscribe({
         next: (data) => {
           this.cargando = false;
           alert(`✅ Reserva ${data.reserva.codigoReserva} cancelada con éxito.`);
           
-          // Actualizamos el estado local después de la cancelación
+          // Actualizamos la vista localmente para reflejar el cambio sin recargar
           this.reservaEncontrada!.estadoReserva = 'CANCELADA'; 
           this.puedeCancelar = false;
-          this.cdr.detectChanges(); // Forzar actualización post-cancelación
+          
+          this.cdr.detectChanges(); 
         },
         error: (err) => {
           this.cargando = false;
@@ -94,7 +115,7 @@ export class AutogestionComponent {
       });
   }
 
-  // Permite al usuario limpiar la búsqueda y volver al formulario
+  // --- NUEVA BÚSQUEDA (LIMPIAR) ---
   nuevaBusqueda() {
     this.reservaEncontrada = null;
     this.codigoBusqueda = '';

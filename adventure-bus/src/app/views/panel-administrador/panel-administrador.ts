@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core'; // <--- IMPORTANTE
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -10,21 +10,23 @@ import { BusService, BusDTO } from '../../services/bus.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './panel-administrador.html',
-  styleUrls: ['./panel-administrador.scss']
+  styleUrls: ['./panel-administrador.scss'] // Asegúrate que el nombre coincida
 })
 export class PanelAdministradorComponent implements OnInit {
+  
+  // INYECCIÓN DE DEPENDENCIAS
   private authService = inject(AuthService);
   private router = inject(Router);
   private busService = inject(BusService);
-  
-  // 🛠️ SOLUCIÓN: Inyectamos el detector de cambios
-  private cd = inject(ChangeDetectorRef); 
+  private cdr = inject(ChangeDetectorRef); // Vital para actualizar la vista
 
+  // DATOS
   buses: BusDTO[] = [];
   tiposServicio = ['Clásico', 'Vip', 'Premium'];
   
-  // Inicialización correcta para evitar errores de null
   busActual: BusDTO = this.inicializarBus();
+  
+  // ESTADOS DE LA VISTA
   esModoEdicion: boolean = false;
   cargando: boolean = false;
   error: string = '';
@@ -33,6 +35,7 @@ export class PanelAdministradorComponent implements OnInit {
     this.cargarBuses();
   }
 
+  // Objeto base para resetear el formulario
   inicializarBus(): BusDTO {
     return {
       id: 0,
@@ -55,63 +58,77 @@ export class PanelAdministradorComponent implements OnInit {
       next: (data) => {
         this.buses = data;
         this.cargando = false;
-        this.cd.detectChanges(); // <--- ¡FUERZA LA ACTUALIZACIÓN VISUAL!
+        this.cdr.detectChanges(); // Forzamos actualización visual
       },
       error: (err) => {
-        console.error(err);
+        console.error("Error cargando buses:", err);
         this.cargando = false;
+        this.cdr.detectChanges();
       }
     });
   }
 
   iniciarEdicion(bus: BusDTO) {
     this.esModoEdicion = true;
-    this.busActual = { ...bus }; // Clonamos
+    this.busActual = { ...bus }; // Clonamos para no editar la tabla directamente
+    
+    // Scroll suave hacia el formulario
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   cancelarEdicion() {
     this.esModoEdicion = false;
     this.busActual = this.inicializarBus();
+    this.error = '';
   }
 
   guardarBus() {
     this.cargando = true;
     this.error = '';
 
+    // Decidimos si es CREAR o ACTUALIZAR
     const peticion$ = this.esModoEdicion 
       ? this.busService.updateBus(this.busActual.id, this.busActual)
       : this.busService.guardarBus(this.busActual); 
 
     peticion$.subscribe({
       next: () => {
-        alert(this.esModoEdicion ? '✅ Bus actualizado' : '✅ Nuevo bus creado');
-        this.cargarBuses(); 
-        this.cancelarEdicion();
-        this.cd.detectChanges(); // <--- ¡FUERZA LA ACTUALIZACIÓN!
+        // Éxito
+        this.cargarBuses(); // Recargamos la lista
+        this.cancelarEdicion(); // Reseteamos form
+        this.cargando = false;
+        
+        // Opcional: Podrías usar un Toast aquí en lugar de alert
+        alert(this.esModoEdicion ? '✅ Bus actualizado correctamente' : '✅ Nuevo bus registrado');
+        
+        this.cdr.detectChanges();
       },
       error: (err: any) => { 
-        console.error(err);
-        this.error = "Error al guardar los datos.";
+        console.error("Error guardando:", err);
+        this.error = "No se pudo guardar. Verifique que la placa no esté duplicada.";
         this.cargando = false;
-        this.cd.detectChanges(); // <--- Incluso en error, actualizamos la vista
+        this.cdr.detectChanges();
       }
     });
   }
 
   eliminarBus(id: number) {
-    if (!confirm('¿Seguro que deseas eliminar este bus permanentemente?')) return;
+    if (!confirm('¿Está seguro de eliminar este bus? Esta acción no se puede deshacer.')) return;
+    
+    // Optimismo UI: Lo quitamos visualmente primero para que se sienta rápido
+    const respaldoBuses = [...this.buses];
+    this.buses = this.buses.filter(b => b.id !== id);
     
     this.busService.eliminarBus(id).subscribe({
       next: () => {
-        // Optimismo UI: Lo quitamos de la lista visualmente primero
-        this.buses = this.buses.filter(b => b.id !== id);
-        this.cd.detectChanges(); // <--- Actualizamos vista inmediatamente
-        alert('🗑️ Bus eliminado correctamente');
+        // Confirmado en backend, todo bien
+        this.cdr.detectChanges();
       },
       error: (err: any) => {
-        console.error(err);
-        alert('Error al eliminar. Puede que tenga ventas asociadas.');
+        // Si falla, revertimos el cambio visual
+        this.buses = respaldoBuses;
+        alert('❌ No se puede eliminar: El bus tiene viajes o ventas asociadas.');
+        this.cdr.detectChanges();
       }
     });
   }

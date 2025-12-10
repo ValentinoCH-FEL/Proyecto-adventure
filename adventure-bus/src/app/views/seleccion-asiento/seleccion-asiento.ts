@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { BusService, BusDTO } from '../../services/bus.service';
 
-interface AsientoVisual {
+export interface AsientoVisual {
   numero: string;
   piso: 1 | 2;
   estado: 'libre' | 'ocupado' | 'seleccionado';
@@ -22,21 +22,19 @@ export class SeleccionAsientoComponent implements OnInit {
   private router = inject(Router);
   private busService = inject(BusService);
 
-  // --- SIGNALS (ESTADO REACTIVO) ---
+  // --- SIGNALS ---
   bus = signal<BusDTO | null>(null);
   piso1 = signal<AsientoVisual[]>([]);
   piso2 = signal<AsientoVisual[]>([]);
-  pisoActivo = signal<1 | 2>(1); // 1 o 2
+  pisoActivo = signal<1 | 2>(1);
   seleccionados = signal<AsientoVisual[]>([]);
   fechaViaje = signal<string>('');
   
-  // Calcula el total automáticamente cuando cambian los seleccionados
   totalPagar = computed(() => {
     return this.seleccionados().reduce((acc, curr) => acc + curr.precio, 0);
   });
 
   ngOnInit() {
-    // Leemos el ID del bus y la FECHA de la URL
     const idBus = this.route.snapshot.paramMap.get('id');
     const fecha = this.route.snapshot.queryParamMap.get('fecha');
 
@@ -44,18 +42,22 @@ export class SeleccionAsientoComponent implements OnInit {
       this.fechaViaje.set(fecha);
       this.cargarDatosBus(Number(idBus));
     } else {
-      console.error("Faltan parámetros");
-      this.router.navigate(['/']); // Si faltan datos, volver al home
+      console.warn("Faltan parámetros");
+      this.router.navigate(['/']);
     }
   }
 
   cargarDatosBus(id: number) {
     this.busService.obtenerBusPorId(id).subscribe({
       next: (data) => {
-        this.bus.set(data);
-        this.construirMapaBus(data);
+        if (data) {
+          this.bus.set(data);
+          this.construirMapaBus(data);
+        } else {
+          this.router.navigate(['/']);
+        }
       },
-      error: (err) => console.error('Error al conectar con backend:', err)
+      error: (err) => console.error(err)
     });
   }
 
@@ -64,37 +66,41 @@ export class SeleccionAsientoComponent implements OnInit {
     const precioBase = Number(data.tarifaBase);
     const fechaBuscada = this.fechaViaje();
 
-    // 1. Filtrar ocupados: Solo marcamos ocupado si coincide la fecha
-    // CÓDIGO CORREGIDO (Agregamos el "|| []")
-// Esto significa: Si data.asientosOcupados es nulo, usa un array vacío []
-const ocupadosIds = (data.asientosOcupados || []) 
-    .filter(ocup => ocup.fechaViaje.toString().includes(fechaBuscada))
-    .map(ocup => ocup.numeroAsiento.toString());
+    const ocupadosIds = (data.asientosOcupados || [])
+      .filter(ocup => ocup.fechaViaje === fechaBuscada)
+    .map(ocup => (ocup.asientoNumero || ocup.numeroAsiento || '').toString());
+    const esDoblePiso = data.capacidadTotal > 60;
 
-    // 2. Generar cajitas para cada asiento
     for (let i = 1; i <= data.capacidadTotal; i++) {
       const numStr = i.toString();
-      
-      // Lógica de pisos (si > 45 asientos, 1-12 son VIP piso 1)
-      let esPiso1 = (i <= 12 && data.capacidadTotal > 45) || data.capacidadTotal <= 45;
-      
-      const precioFinal = (esPiso1 && data.capacidadTotal > 45) ? precioBase * 1.3 : precioBase;
+      let pisoAsiento: 1 | 2 = 1;
+      let precioAsiento = precioBase;
+
+      if (esDoblePiso) {
+        if (i <= 12) {
+          pisoAsiento = 1;
+          precioAsiento = precioBase * 1.4;
+        } else {
+          pisoAsiento = 2;
+        }
+      }
 
       listaAsientos.push({
         numero: numStr,
-        piso: esPiso1 && data.capacidadTotal > 45 ? 1 : 2,
+        piso: pisoAsiento,
         estado: ocupadosIds.includes(numStr) ? 'ocupado' : 'libre',
-        precio: precioFinal
+        precio: precioAsiento
       });
     }
 
-    if (data.capacidadTotal <= 45) {
-       this.piso1.set(listaAsientos);
-       this.pisoActivo.set(1);
-    } else {
+    if (esDoblePiso) {
        this.piso1.set(listaAsientos.filter(a => a.piso === 1));
        this.piso2.set(listaAsientos.filter(a => a.piso === 2));
-       this.pisoActivo.set(2);
+       this.pisoActivo.set(1);
+    } else {
+       this.piso1.set(listaAsientos);
+       this.piso2.set([]);
+       this.pisoActivo.set(1);
     }
   }
 
@@ -109,7 +115,7 @@ const ocupadosIds = (data.asientosOcupados || [])
         return lista.filter(s => s.numero !== asiento.numero);
       } else {
         if (lista.length >= 5) {
-          alert("Máximo 5 pasajes por compra");
+          alert("Máximo 5 pasajes por compra.");
           return lista;
         }
         asiento.estado = 'seleccionado';
@@ -122,18 +128,24 @@ const ocupadosIds = (data.asientosOcupados || [])
     this.pisoActivo.set(piso);
   }
 
-  // --- AQUÍ ESTABA EL ERROR DE NAVEGACIÓN ---
+  // --- CORRECCIÓN CRÍTICA AQUÍ ---
   irAPagar() {
-    // Guardamos la info en localStorage
+    if (this.seleccionados().length === 0) return;
+
+    // Restauramos la estructura EXACTA que tenía tu código original
+    // para que las siguientes vistas (Registro/Pago) funcionen sin cambios.
     const resumenCompra = {
-      bus: this.bus(),
+      bus: this.bus(), // Objeto completo del bus
       asientos: this.seleccionados(),
       total: this.totalPagar(),
-      fecha: this.fechaViaje()
+      fecha: this.fechaViaje() // Clave 'fecha' en lugar de 'fechaViaje' si así lo usabas
     };
-    localStorage.setItem('reserva_temporal', JSON.stringify(resumenCompra));
-    
-    // CORRECCIÓN: Ahora navegamos a la pantalla de Registro de Pasajeros
-    this.router.navigate(['/registro-pasajero']);
+
+    try {
+        localStorage.setItem('reserva_temporal', JSON.stringify(resumenCompra));
+        this.router.navigate(['/registro-pasajero']);
+    } catch (e) {
+        console.error('Error al guardar localStorage', e);
+    }
   }
 }

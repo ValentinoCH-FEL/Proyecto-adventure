@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { SeleccionAsientoComponent } from './seleccion-asiento';
+import { SeleccionAsientoComponent } from "./seleccion-asiento";
 
 describe('SeleccionAsientoComponent', () => {
   let component: SeleccionAsientoComponent;

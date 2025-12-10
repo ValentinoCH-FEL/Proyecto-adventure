@@ -1,9 +1,26 @@
 import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms'; // Template-driven forms
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { interval, Subscription } from 'rxjs';
 import { takeWhile } from 'rxjs/operators';
+
+// Interfaz estricta para el pasajero
+interface Pasajero {
+  asientoNumero: string;
+  piso: number;
+  precio: number;
+  tipoDocumento: string;
+  numeroDocumento: string;
+  nombres: string;
+  apellidoPaterno: string;
+  apellidoMaterno: string;
+  fechaNacimiento: string;
+  genero: string;
+  nacionalidad: string;
+  correoElectronico: string;
+  edad?: number; // Campo auxiliar calculado
+}
 
 @Component({
   selector: 'app-registro-pasajero',
@@ -15,13 +32,11 @@ import { takeWhile } from 'rxjs/operators';
 export class RegistroPasajeroComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   
-  // --- SIGNALS PARA EL TIMER ---
-  // 600 segundos = 10 minutos
+  // --- TIMER (10 minutos) ---
   timeLeft = signal(600); 
   isExpired = signal(false);
   private timerSub: Subscription | null = null;
 
-  // Formato MM:SS computado automáticamente
   formattedTime = computed(() => {
     const minutes = Math.floor(this.timeLeft() / 60);
     const seconds = this.timeLeft() % 60;
@@ -29,13 +44,11 @@ export class RegistroPasajeroComponent implements OnInit, OnDestroy {
   });
 
   reservaData: any = null;
-  pasajeros: any[] = [];
-  
-  // Variable para controlar si se intentó enviar el formulario (para mostrar errores masivos)
+  pasajeros: Pasajero[] = [];
   formSubmitted = false; 
 
   tiposDocumento = [
-    { valor: 'DNI', texto: 'DNI' },
+    { valor: 'DNI', texto: 'DNI (Documento Nacional)' },
     { valor: 'PASAPORTE', texto: 'Pasaporte' },
     { valor: 'CE', texto: 'Carnet de Extranjería' }
   ];
@@ -46,7 +59,7 @@ export class RegistroPasajeroComponent implements OnInit, OnDestroy {
   ];
 
   nacionalidades = [
-    'Peruana', 'Argentina', 'Boliviana', 'Chilena', 'Colombiana', 'Ecuatoriana', 'Otra'
+    'Peruana', 'Argentina', 'Boliviana', 'Chilena', 'Colombiana', 'Ecuatoriana', 'Venezolana', 'Otra'
   ];
 
   ngOnInit() {
@@ -58,7 +71,6 @@ export class RegistroPasajeroComponent implements OnInit, OnDestroy {
     if (this.timerSub) this.timerSub.unsubscribe();
   }
 
-  // --- LÓGICA DEL TIMER ---
   iniciarTimer() {
     this.timerSub = interval(1000)
       .pipe(takeWhile(() => this.timeLeft() > 0))
@@ -66,7 +78,6 @@ export class RegistroPasajeroComponent implements OnInit, OnDestroy {
         this.timeLeft.update(v => v - 1);
         if (this.timeLeft() === 0) {
           this.isExpired.set(true);
-          // Opcional: Limpiar localStorage o avisar al backend para liberar asientos
         }
       });
   }
@@ -76,78 +87,151 @@ export class RegistroPasajeroComponent implements OnInit, OnDestroy {
   }
 
   reiniciarProceso() {
-    // Lógica para volver al inicio cuando expira
     this.router.navigate(['/']); 
   }
 
   cargarDatos() {
-    const data = localStorage.getItem('reserva_temporal');
-    if (data) {
-      this.reservaData = JSON.parse(data);
-      
-      if (!this.reservaData.asientos || this.reservaData.asientos.length === 0) {
-        this.router.navigate(['/']);
-        return;
-      }
+    try {
+      const data = localStorage.getItem('reserva_temporal');
+      if (data) {
+        this.reservaData = JSON.parse(data);
+        
+        if (!this.reservaData.asientos || this.reservaData.asientos.length === 0) {
+          this.router.navigate(['/']);
+          return;
+        }
 
-      this.pasajeros = this.reservaData.asientos.map((asiento: any) => ({
-        asientoNumero: asiento.numero,
-        piso: asiento.piso,
-        precio: asiento.precio,
-        tipoDocumento: 'DNI',
-        numeroDocumento: '',
-        nombres: '',
-        apellidoPaterno: '',
-        apellidoMaterno: '',
-        fechaNacimiento: '',
-        genero: '',
-        nacionalidad: 'Peruana',
-        correoElectronico: ''
-      }));
-    } else {
+        if (this.reservaData.pasajeros && this.reservaData.pasajeros.length > 0) {
+           this.pasajeros = this.reservaData.pasajeros;
+        } else {
+           this.pasajeros = this.reservaData.asientos.map((asiento: any) => ({
+            asientoNumero: asiento.numero,
+            piso: asiento.piso,
+            precio: asiento.precio,
+            tipoDocumento: 'DNI', 
+            numeroDocumento: '',
+            nombres: '',
+            apellidoPaterno: '',
+            apellidoMaterno: '',
+            fechaNacimiento: '',
+            genero: '', // Inicialmente vacío para obligar selección
+            nacionalidad: 'Peruana',
+            correoElectronico: ''
+          }));
+        }
+      } else {
+        this.router.navigate(['/']);
+      }
+    } catch (e) {
+      console.error("Error al leer datos", e);
       this.router.navigate(['/']);
     }
   }
 
-  // Validar si un campo es inválido visualmente
-  isFieldInvalid(model: any): boolean {
-    // Es inválido si: (Fue tocado O se intentó enviar el form) Y tiene errores
-    return (model.invalid && (model.dirty || model.touched || this.formSubmitted));
+  copiarEmailATodos() {
+    const emailTitular = this.pasajeros[0].correoElectronico;
+    if (emailTitular) {
+      for (let i = 1; i < this.pasajeros.length; i++) {
+        this.pasajeros[i].correoElectronico = emailTitular;
+      }
+    }
   }
 
+  isFieldInvalid(model: any): boolean {
+    return (model && model.invalid && (model.dirty || model.touched || this.formSubmitted));
+  }
+
+  // --- LÓGICA CORE: CÁLCULO DE EDAD EXACTA ---
+  private calcularEdad(fechaNacimiento: string): number {
+    const hoy = new Date();
+    const cumpleanos = new Date(fechaNacimiento + 'T12:00:00'); 
+    
+    let edad = hoy.getFullYear() - cumpleanos.getFullYear();
+    const m = hoy.getMonth() - cumpleanos.getMonth();
+
+    if (m < 0 || (m === 0 && hoy.getDate() < cumpleanos.getDate())) {
+        edad--;
+    }
+    return edad;
+  }
+
+  // --- VALIDACIÓN PROFESIONAL ---
   procesarYContinuar() {
     this.formSubmitted = true;
-
-    // Validación manual extra antes de guardar
-    // Verificamos si hay algún input inválido en el DOM o campos vacíos
     const emailRegex = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$/;
-    let hayErrores = false;
+    
+    let mensajeError = "";
+    let contadorAdultos = 0;
+    let contadorMenores = 0;
 
-    for (const p of this.pasajeros) {
-      if (!p.nombres || !p.apellidoPaterno || !p.numeroDocumento || !p.fechaNacimiento || !p.correoElectronico) {
-        hayErrores = true;
+    for (const [index, p] of this.pasajeros.entries()) {
+      const numPasajero = index + 1;
+
+      // A. Campos Vacíos (AHORA INCLUYE GÉNERO Y NACIONALIDAD)
+      if (!p.nombres || !p.apellidoPaterno || !p.numeroDocumento || 
+          !p.fechaNacimiento || !p.correoElectronico || !p.genero || !p.nacionalidad) {
+        mensajeError = `Por favor, completa todos los datos obligatorios del Pasajero ${numPasajero}.`;
         break;
       }
-      // Validación extra de formato de correo
+
+      // B. Formato de Correo
       if (!emailRegex.test(p.correoElectronico)) {
-        hayErrores = true; 
+        mensajeError = `El correo electrónico del Pasajero ${numPasajero} no es válido.`;
         break;
+      }
+
+      // C. Validación Documento
+      if (p.tipoDocumento === 'DNI') {
+        if (!/^\d{8}$/.test(p.numeroDocumento)) {
+           mensajeError = `El DNI del Pasajero ${numPasajero} debe tener exactamente 8 números.`;
+           break;
+        }
+      } else {
+        if (!/^[a-zA-Z0-9]{6,12}$/.test(p.numeroDocumento)) {
+           mensajeError = `El documento del Pasajero ${numPasajero} tiene un formato inválido.`;
+           break;
+        }
+      }
+
+      // D. Validación de Edad
+      const edad = this.calcularEdad(p.fechaNacimiento);
+      p.edad = edad;
+
+      if (edad < 0) {
+        mensajeError = `La fecha de nacimiento del Pasajero ${numPasajero} es inválida.`;
+        break;
+      }
+
+      if (edad >= 18) {
+        contadorAdultos++;
+      } else {
+        contadorMenores++;
       }
     }
 
-    if (hayErrores) {
-      // El usuario verá los bordes rojos gracias a la variable formSubmitted
-      alert("Por favor, corrige los errores marcados en rojo antes de continuar.");
+    if (mensajeError) {
+      alert(mensajeError);
       return;
     }
 
-    // Guardar y Navegar
+    // Regla de Menores
+    if (contadorMenores > 0 && contadorAdultos === 0) {
+      alert("⚠️ POLÍTICA DE VIAJE:\n\nLos menores de edad no pueden viajar solos. Debe incluir al menos un adulto (18+) en la reserva.");
+      return;
+    }
+
+    // --- TODO OK ---
     const reservaActualizada = {
       ...this.reservaData,
       pasajeros: this.pasajeros
     };
 
-    localStorage.setItem('reserva_temporal', JSON.stringify(reservaActualizada));
-    this.router.navigate(['/pago']); 
+    try {
+      localStorage.setItem('reserva_temporal', JSON.stringify(reservaActualizada));
+      this.router.navigate(['/pago']); 
+    } catch (e) {
+      console.error(e);
+      alert("Error al guardar los datos. Intente nuevamente.");
+    }
   }
 }

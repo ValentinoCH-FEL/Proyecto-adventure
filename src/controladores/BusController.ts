@@ -44,6 +44,15 @@ BusRouter.post('/', async (req: Request, res: Response) => {
 
     } catch (error: any) {
         console.error("❌ Error creando bus:", error);
+
+        // MEJORA PRO: Manejo específico de Placa Duplicada
+        if (error.code === 'ER_DUP_ENTRY' || error.errno === 1062) {
+            return res.status(409).json({ 
+                message: `La placa ${req.body.placa} ya está registrada en el sistema.`,
+                error: "PLACA_DUPLICADA"
+            });
+        }
+
         return res.status(500).json({ 
             message: "Error al guardar en base de datos.", 
             error: error.message 
@@ -61,27 +70,30 @@ BusRouter.put('/:id', async (req: Request, res: Response) => {
         const id = Number(req.params.id);
         const busData = req.body;
         
-        // 1. Instancia del repositorio
         const busRepo = AppDataSource.getRepository(Bus);
-
-        // 2. Buscamos el bus original en la BD
         const busOriginal = await busRepo.findOneBy({ id });
 
         if (!busOriginal) {
             return res.status(404).json({ message: "Bus no encontrado para actualizar" });
         }
 
-        // 3. MERGE: Fusionamos los datos nuevos sobre el original
-        // Esto mantiene el mismo ID y solo cambia lo que enviaste
+        // MERGE: Fusionamos los datos nuevos sobre el original
         busRepo.merge(busOriginal, busData);
-
-        // 4. Guardamos el objeto fusionado
         const busActualizado = await busRepo.save(busOriginal);
 
         return res.json(busActualizado);
 
     } catch (error: any) {
         console.error("Error actualizando bus:", error);
+
+        // MEJORA PRO: Manejo de Placa Duplicada al editar
+        if (error.code === 'ER_DUP_ENTRY' || error.errno === 1062) {
+            return res.status(409).json({ 
+                message: `No se puede actualizar: La placa ${req.body.placa} ya pertenece a otro bus.`,
+                error: "PLACA_DUPLICADA"
+            });
+        }
+
         return res.status(500).json({ message: "Error interno al actualizar", error: error.message });
     }
 });
@@ -89,14 +101,11 @@ BusRouter.put('/:id', async (req: Request, res: Response) => {
 /**
  * DELETE /api/buses/:id
  * Elimina un bus.
- * NOTA: Gracias al cambio en Bus.entity.ts (CASCADE), esto ahora borrará
- * automáticamente las reservas y asientos asociados sin dar error.
  */
 BusRouter.delete('/:id', async (req: Request, res: Response) => {
     try {
         const id = Number(req.params.id);
         
-        // Verificamos si existe antes de borrar (opcional, pero buena práctica)
         const busRepo = AppDataSource.getRepository(Bus);
         const bus = await busRepo.findOneBy({ id });
 
@@ -104,7 +113,7 @@ BusRouter.delete('/:id', async (req: Request, res: Response) => {
             return res.status(404).json({ message: "Bus no encontrado" });
         }
 
-        await busRepo.remove(bus); // Usamos remove del repo directamente para activar los cascades de TypeORM
+        await busRepo.remove(bus); 
         
         return res.status(200).json({ message: "Bus eliminado correctamente" });
     } catch (error: any) {
@@ -120,6 +129,7 @@ BusRouter.delete('/:id', async (req: Request, res: Response) => {
 
 /**
  * GET /api/buses/buscar/ruta
+ * Busca buses disponibles por ruta.
  */
 BusRouter.get('/buscar/ruta', async (req: Request, res: Response) => {
     try {
@@ -138,9 +148,14 @@ BusRouter.get('/buscar/ruta', async (req: Request, res: Response) => {
                 rutaDestino: destino.toString(),
                 estadoActivo: true
             },
+            // MEJORA PRO: Ordenar por hora de salida (los más temprano primero)
+            order: {
+                horaSalida: 'ASC'
+            },
             relations: ["asientosOcupados"] 
         });
 
+        // Filtrado en memoria para devolver solo los asientos ocupados de la fecha solicitada
         const resultados = busesEncontrados.map(bus => {
             bus.asientosOcupados = bus.asientosOcupados.filter(asiento => {
                 const fechaAsiento = new Date(asiento.fechaViaje).toISOString().split('T')[0];
@@ -172,17 +187,26 @@ BusRouter.get('/', async (req: Request, res: Response) => {
 
 /**
  * GET /api/buses/:id
+ * Obtiene un bus por ID.
+ * CAMBIO APLICADO: Ahora recibe la 'fecha' por query param para filtrar ocupados.
  */
 BusRouter.get('/:id', async (req: Request, res: Response) => {
     try {
         const id = Number(req.params.id);
+        
+        // 1. Extraemos la fecha de la URL (ej: ?fecha=2025-12-04)
+        const { fecha } = req.query;
+
         if (isNaN(id)) return res.status(400).json({ message: "ID inválido" });
         
-        const bus = await BusService.findBusById(id);
+        // 2. Pasamos la fecha al servicio para que filtre los asientos ocupados
+        const bus = await BusService.findBusById(id, fecha as string);
+        
         if (!bus) return res.status(404).json({ message: "Bus no encontrado" });
 
         return res.json(bus);
     } catch (error) {
+        console.error("Error obteniendo bus por ID:", error);
         return res.status(500).json({ message: "Error interno" });
     }
 });

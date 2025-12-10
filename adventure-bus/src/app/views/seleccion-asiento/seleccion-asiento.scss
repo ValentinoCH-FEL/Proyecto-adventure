@@ -1,220 +1,664 @@
-// Variables de color (Estilo Cruz del Sur / Oltursa)
-$primary: #d32f2f; // Rojo intenso
-$secondary: #003366; // Azul oscuro
-$bg-light: #f5f7fa;
-$seat-free: #ffffff;
-$seat-occupied: #e0e0e0;
-$seat-selected: #ffcc00;
+@use "sass:color"; // <--- ESTA ES LA LÍNEA QUE FALTA
+// -----------------------------------------------------------
+// 1. VARIABLES & PALETA
+// -----------------------------------------------------------
+$primary: #011638;       
+$secondary: #0077b6;     
+$accent: #fca311;        
+$danger: #e63946;        
+$bg-light: #f3f6f8;      
+$white: #ffffff;
+$gray-100: #e9ecef;
+$gray-300: #dee2e6;
+$gray-600: #6c757d;
+$text-main: #212529;
 
+// Colores de Asientos
+$seat-free: #ffffff;
+$seat-border: #adb5bd; // Variable correcta para bordes
+$seat-occupied: #e9ecef;
+$seat-occupied-icon: #adb5bd;
+$seat-selected: $secondary;
+$seat-selected-text: $white;
+
+// Configuración
+$radius-md: 12px;
+$radius-lg: 20px;
+$shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
+$shadow-md: 0 8px 24px rgba(0,0,0,0.08);
+$bus-width: 360px; 
+
+// -----------------------------------------------------------
+// 2. ESTILOS GENERALES
+// -----------------------------------------------------------
 .page-container {
-  max-width: 1200px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 20px;
-  font-family: 'Roboto', sans-serif;
+  padding: 40px 20px;
   background-color: $bg-light;
   min-height: 100vh;
+  font-family: 'Poppins', sans-serif;
 }
 
-// HEADER
-.trip-header {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  border-left: 6px solid $secondary;
-
-  h2 { margin: 0; font-size: 1.5rem; color: #333; }
-  .arrow { color: $primary; font-style: normal; margin: 0 10px; }
-  
-  .meta {
-    margin-top: 8px;
-    display: flex;
-    gap: 15px;
-    color: #666;
-    
-    .badge {
-      background: $secondary;
-      color: white;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 0.8rem;
-    }
-  }
-}
-
-.content-wrapper {
-  display: flex;
-  gap: 40px;
-  flex-wrap: wrap; // Responsive
-}
-
-// BUS SECTION
-.bus-section {
-  flex: 2;
-  min-width: 300px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.floor-tabs {
-  margin-bottom: 1rem;
+// Notificación Toast (Flotante)
+.toast-notification {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 50px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  z-index: 9999;
   display: flex;
   gap: 10px;
-  
-  button {
-    padding: 10px 20px;
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 20px;
-    cursor: pointer;
-    font-weight: 500;
-    transition: all 0.3s;
-    
-    &.active {
-      background: $secondary;
-      color: white;
-      border-color: $secondary;
-      box-shadow: 0 4px 6px rgba(0,51,102,0.2);
-    }
-  }
-}
-
-.bus-chassis {
-  background: #eeeeee;
-  border: 4px solid #444;
-  border-radius: 40px 40px 10px 10px; // Forma de trompa de bus
-  padding: 25px;
-  width: 280px; // Ancho fijo para simular bus
-  min-height: 500px;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-  position: relative;
-}
-
-.driver-cabin {
-  text-align: center;
-  border-bottom: 2px dashed #bbb;
-  padding-bottom: 10px;
-  margin-bottom: 20px;
-  color: #777;
-}
-
-.seats-grid {
-  display: grid;
-  // 4 columnas: 2 izquierda, 2 derecha.
-  // El espacio (gap) simula el pasillo
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  
-  // Opcional: Para buses de 3 filas (VIP), cambiar grid-template-columns en CSS
-}
-
-.seat {
-  height: 45px;
-  background: $seat-free;
-  border: 1px solid #ccc;
-  border-radius: 8px 8px 4px 4px; // Forma de asiento
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: transform 0.2s;
-  position: relative;
-  
-  .seat-num { font-weight: bold; font-size: 0.9rem; }
-  .seat-price { font-size: 0.65rem; color: #555; }
+  animation: slideDown 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 
-  &:hover { transform: scale(1.1); border-color: $secondary; z-index: 2; }
+  &.error { background: $danger; }
+  &.info { background: #2ed573; color: #000; }
 
-  // ESTADOS
-  &.occupied {
-    background: $seat-occupied;
-    color: #999;
-    cursor: not-allowed;
-    border-color: transparent;
-    &:hover { transform: none; }
-  }
-
-  &.selected {
-    background: $seat-selected;
-    color: #000;
-    border-color: darken($seat-selected, 20%);
-    box-shadow: 0 0 10px rgba(255, 204, 0, 0.6);
-    transform: scale(1.1);
-  }
+  .icon { font-size: 1.2rem; }
+  .text { font-weight: 500; font-size: 0.95rem; }
 }
 
-.legend {
-  margin-top: 20px;
-  display: flex;
-  gap: 20px;
-  
-  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; }
-  .dot { width: 15px; height: 15px; border-radius: 4px; display: block; border: 1px solid #ccc;}
-  .free { background: $seat-free; }
-  .occupied { background: $seat-occupied; }
-  .selected { background: $seat-selected; }
+@keyframes slideDown {
+  from { transform: translate(-50%, -100%); opacity: 0; }
+  to { transform: translate(-50%, 0); opacity: 1; }
 }
 
-// SUMMARY SECTION
-.summary-section {
-  flex: 1;
-  min-width: 280px;
-  background: white;
-  padding: 25px;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-  height: fit-content;
-  position: sticky;
-  top: 20px;
+// -----------------------------------------------------------
+// 3. HEADER DEL VIAJE
+// -----------------------------------------------------------
+.trip-header {
+  background: $white;
+  border-radius: $radius-md;
+  box-shadow: $shadow-sm;
+  padding: 24px 30px;
+  margin-bottom: 30px;
+  border-left: 6px solid $accent;
 
-  h3 { margin-top: 0; color: $secondary; border-bottom: 1px solid #eee; padding-bottom: 15px; }
-
-  .selected-list {
-    min-height: 100px;
-    ul { list-style: none; padding: 0; }
-    li {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 0;
-      border-bottom: 1px solid #f0f0f0;
-    }
-    .seat-detail { display: flex; flex-direction: column; }
-    .price { font-weight: bold; }
-  }
-
-  .total-row {
+  .header-content {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 2px solid #eee;
-    font-size: 1.2rem;
-    
-    .total-amount { color: $primary; font-weight: bold; font-size: 1.5rem; }
+    flex-wrap: wrap;
+    gap: 20px;
   }
 
-  .btn-checkout {
-    width: 100%;
-    margin-top: 20px;
-    padding: 15px;
-    background: $primary;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background 0.3s;
+  .route-display {
+    display: flex;
+    align-items: center;
+    gap: 15px;
     
-    &:hover:not(:disabled) { background: darken($primary, 10%); }
-    &:disabled { background: #ccc; cursor: not-allowed; }
+    .city {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: $primary;
+    }
+
+    .separator {
+      position: relative;
+      width: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      .dashed-line {
+        position: absolute;
+        width: 100%;
+        border-top: 2px dashed $gray-300;
+        z-index: 1;
+      }
+      .bus-icon {
+        background: $white;
+        z-index: 2;
+        padding: 0 10px;
+        font-size: 1.2rem;
+      }
+    }
   }
+
+  .trip-meta {
+    display: flex;
+    gap: 25px;
+    
+    .meta-item {
+      display: flex;
+      flex-direction: column;
+      
+      .label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: $gray-600;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+      }
+      
+      .value {
+        font-weight: 600;
+        color: $text-main;
+        
+        &.badge {
+          background: #e7f5ff;
+          color: $secondary;
+          padding: 2px 10px;
+          border-radius: 20px;
+          font-size: 0.85rem;
+        }
+      }
+    }
+  }
+}
+
+// -----------------------------------------------------------
+// 4. LAYOUT DE SELECCIÓN (Grid 2 columnas)
+// -----------------------------------------------------------
+.selection-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px; 
+  gap: 40px;
+  align-items: start;
+}
+
+// -----------------------------------------------------------
+// 5. SECCIÓN DEL BUS
+// -----------------------------------------------------------
+.bus-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+// Selector de Pisos
+.floor-selector {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 25px;
+
+  .floor-btn {
+    background: $white;
+    border: 2px solid transparent;
+    padding: 12px 25px;
+    border-radius: 12px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    min-width: 140px;
+
+    .floor-name {
+      font-weight: 700;
+      color: $text-main;
+      font-size: 1rem;
+    }
+    .floor-desc {
+      font-size: 0.75rem;
+      color: $gray-600;
+    }
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: $shadow-md;
+    }
+
+    &.active {
+      border-color: $secondary;
+      background: #f0f9ff;
+      .floor-name { color: $secondary; }
+    }
+  }
+
+  .single-floor-badge {
+    background: $primary;
+    color: $white;
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    box-shadow: $shadow-sm;
+  }
+}
+
+// --- EL CHASIS DEL BUS ---
+.bus-chassis {
+  background-color: #e0e0e0;
+  background-image: 
+    radial-gradient(#b0b0b0 15%, transparent 16%),
+    radial-gradient(#b0b0b0 15%, transparent 16%);
+  background-size: 10px 10px;
+  background-position: 0 0, 5px 5px;
+  
+  border: 12px solid #2c3e50; 
+  border-radius: 60px 60px 20px 20px; 
+  padding: 50px 30px 30px; 
+  width: $bus-width; 
+  min-height: 650px;
+  position: relative;
+  box-shadow: 
+    0 20px 50px rgba(0,0,0,0.25), 
+    inset 0 0 30px rgba(0,0,0,0.1); 
+  margin-bottom: 30px;
+
+  &::before, &::after {
+    content: '';
+    position: absolute;
+    top: 90px;
+    width: 14px;
+    height: 40px;
+    background: #2c3e50;
+    border-radius: 4px;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+  }
+  &::before { left: -24px; transform: rotate(15deg); }
+  &::after { right: -24px; transform: rotate(-15deg); }
+
+  .driver-cabin {
+    position: absolute;
+    top: 25px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    border-bottom: 3px solid #999;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: $gray-600;
+
+    .wheel-icon { 
+      font-size: 2rem; 
+      margin-bottom: 5px; 
+      filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
+    }
+    .driver-label { 
+      font-size: 0.7rem; 
+      text-transform: uppercase; 
+      letter-spacing: 1px; 
+      font-weight: 700;
+    }
+  }
+
+  .seats-grid {
+    margin-top: 80px; 
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); 
+    column-gap: 8px; 
+    row-gap: 20px; 
+
+    // TRUCO DEL PASILLO
+    .seat-item:nth-child(4n+2) {
+      margin-right: 50px; 
+    }
+    
+    &.single-floor { 
+       grid-template-columns: repeat(3, 1fr);
+       .seat-item:nth-child(3n+1) { margin-right: 0; }
+       .seat-item:nth-child(3n+2) { margin-right: 50px; }
+    }
+  }
+
+  .bus-rear {
+    margin-top: 50px;
+    display: flex;
+    justify-content: space-between;
+    padding: 15px;
+    background: rgba(255,255,255,0.4); 
+    border-radius: 8px;
+    border: 1px solid #aaa;
+    backdrop-filter: blur(2px);
+
+    .utility-box {
+      width: 45px;
+      height: 45px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      background: #f8f9fa;
+      border: 2px solid $gray-600;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+      cursor: help;
+      position: relative;
+      
+      &.wc { 
+        color: #0077b6; 
+        border-color: #0077b6; 
+        &::after { 
+            content: 'WC'; position: absolute; bottom: -18px; 
+            font-size: 0.6rem; font-weight: bold; color: $text-main;
+        }
+      }
+      
+      &.stairs { 
+        color: #e67e22; 
+        border-color: #e67e22;
+        background: repeating-linear-gradient(
+          45deg,
+          #fff,
+          #fff 5px,
+          #ffe0b2 5px,
+          #ffe0b2 10px
+        );
+        &::after { 
+            content: 'SUBIR'; position: absolute; bottom: -18px; 
+            font-size: 0.6rem; font-weight: bold; color: $text-main;
+        }
+      }
+      
+      &:hover { transform: scale(1.1); transition: 0.2s; }
+    }
+  }
+}
+
+// BOTÓN DE ASIENTO
+.seat-item {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.2s;
+
+  .seat-shape {
+    width: 46px;
+    height: 52px; 
+    background-color: $seat-free;
+    border: 2px solid $seat-border;
+    border-radius: 10px 10px 6px 6px; 
+    position: relative;
+    margin-bottom: 4px;
+    
+    box-shadow: 0 4px 0 #999, 0 6px 5px rgba(0,0,0,0.1); 
+    transition: all 0.2s;
+
+    .headrest {
+      position: absolute;
+      bottom: 6px;
+      left: 4px;
+      right: 4px;
+      height: 60%;
+      background-color: rgba(0,0,0,0.06); 
+      border-radius: 4px;
+    }
+
+    .status-icon {
+      position: absolute;
+      top: 35%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.2rem;
+      color: $gray-600;
+      z-index: 2;
+    }
+  }
+
+  .seat-number {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #444;
+    position: absolute;
+    bottom: 25px; 
+    z-index: 3;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.8);
+  }
+
+  .seat-price {
+    font-size: 0.65rem;
+    color: $text-main;
+    font-weight: 600;
+    margin-top: 2px;
+  }
+
+  // ESTADOS
+  &:not([disabled]):hover {
+    transform: translateY(-3px);
+    .seat-shape { 
+        border-color: $secondary; 
+        box-shadow: 0 6px 0 $secondary, 0 8px 10px rgba($secondary, 0.2); 
+    }
+  }
+
+  &.seleccionado {
+    .seat-shape {
+      background-color: $secondary;
+      border-color: color.scale($secondary, $lightness: -10%);      box-shadow: 0 4px 0 color.scale($secondary, $lightness: -20%);      
+      .headrest { background-color: rgba(255,255,255,0.2); }
+      .status-icon { color: $white; }
+    }
+    .seat-number { color: $white; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+    .seat-price { color: $secondary; font-weight: bold; }
+  }
+
+  &.ocupado {
+    cursor: not-allowed;
+    .seat-shape {
+      background-color: $gray-300;
+      border-color: #ccc;
+      box-shadow: none; 
+      opacity: 0.7;
+      
+      .status-icon { color: #888; }
+    }
+    .seat-number { display: none; } 
+  }
+}
+
+// LEYENDA (CORREGIDO)
+.legend-bar {
+  display: flex;
+  gap: 20px;
+  background: $white;
+  padding: 15px 25px;
+  border-radius: 50px;
+  box-shadow: $shadow-sm;
+  border: 1px solid $gray-100;
+  margin-top: 20px;
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: $gray-600;
+
+    .seat-mini {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      border: 2px solid;
+      
+      // AQUÍ ESTABA EL ERROR: Usamos $seat-border en lugar de $seat-free-border
+      &.free { background: $seat-free; border-color: $seat-border; }
+      &.selected { background: $seat-selected; border-color: $seat-selected; }
+      &.occupied { background: $seat-occupied; border-color: transparent; }
+    }
+  }
+}
+
+// -----------------------------------------------------------
+// 6. PANEL DE RESUMEN
+// -----------------------------------------------------------
+.summary-panel {
+  position: sticky;
+  top: 100px;
+  height: fit-content;
+}
+
+.summary-card {
+  background: $white;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-md;
+  overflow: hidden;
+  border: 1px solid $gray-100;
+
+  .card-header {
+    background: $primary;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: $white;
+
+    h3 { margin: 0; font-size: 1.1rem; font-weight: 600; }
+    .seat-count { font-size: 0.8rem; background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 12px; }
+  }
+
+  .selected-seats-container {
+    padding: 20px;
+    min-height: 150px;
+    max-height: 400px;
+    overflow-y: auto;
+    background-color: $bg-light;
+
+    .empty-state {
+      text-align: center;
+      color: $gray-600;
+      padding: 30px 0;
+      .icon { font-size: 2.5rem; display: block; margin-bottom: 10px; opacity: 0.5; }
+      p { font-size: 0.9rem; margin: 0; }
+    }
+
+    .seats-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+
+      .seat-row {
+        background: $white;
+        border-radius: 10px;
+        padding: 12px 15px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+        border-left: 4px solid $secondary;
+
+        .seat-info {
+          display: flex;
+          flex-direction: column;
+          .number { font-weight: 700; color: $text-main; }
+          .floor-tag { font-size: 0.75rem; color: $gray-600; }
+        }
+
+        .price-info {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-weight: 600;
+          color: $primary;
+
+          .remove-btn {
+            background: #ffe3e3;
+            color: $danger;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            line-height: 1;
+            transition: all 0.2s;
+            
+            &:hover { background: $danger; color: $white; }
+          }
+        }
+      }
+    }
+  }
+
+  .checkout-footer {
+    padding: 20px;
+    background: $white;
+    border-top: 1px solid $gray-100;
+
+    .total-section {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      font-size: 1.1rem;
+      color: $text-main;
+      
+      .amount { font-size: 1.8rem; font-weight: 800; color: $accent; }
+    }
+
+    .btn-primary-action {
+      width: 100%;
+      // Usamos color.scale con lightness negativo (es lo mismo que oscurecer)
+      background: linear-gradient(135deg, $secondary 0%, color.scale($secondary, $lightness: -10%) 100%);      color: $white;
+      border: none;
+      padding: 16px;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 15px rgba($secondary, 0.3);
+
+      &:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba($secondary, 0.4);
+      }
+
+      &:disabled {
+        background: $gray-300;
+        cursor: not-allowed;
+        box-shadow: none;
+        color: $gray-600;
+      }
+    }
+  }
+}
+
+// -----------------------------------------------------------
+// 7. RESPONSIVE
+// -----------------------------------------------------------
+@media (max-width: 900px) {
+  .selection-layout {
+    grid-template-columns: 1fr; 
+    justify-items: center;
+  }
+  
+  .summary-panel {
+    position: fixed; 
+    bottom: 0;
+    top: auto;
+    left: 0;
+    width: 100%;
+    z-index: 100;
+    
+    .summary-card {
+      border-radius: 20px 20px 0 0;
+      box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
+      
+      .selected-seats-container, .card-header { display: none; }
+      
+      .checkout-footer {
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        
+        .total-section { margin: 0; flex-direction: column; align-items: flex-start; font-size: 0.8rem; .amount { font-size: 1.4rem; } }
+        .btn-primary-action { width: auto; padding: 12px 25px; flex: 1; }
+      }
+    }
+  }
+  
+  .page-container { padding-bottom: 120px; } 
 }

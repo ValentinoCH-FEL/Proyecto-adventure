@@ -1,31 +1,67 @@
-<div class="login-container">
+<div class="login-page">
   <div class="login-card">
-    <h1 class="title">Acceso de Administrador</h1>
-    <p class="subtitle">Ingresa tus credenciales para acceder al panel de gestión.</p>
+    
+    <div class="card-header">
+      <div class="icon-brand">
+        🔐
+      </div>
+      <h1 class="title">Acceso Admin</h1>
+      <p class="subtitle">Bienvenido de nuevo. Ingresa tus credenciales.</p>
+    </div>
 
-    <form (ngSubmit)="login()">
+    <form (ngSubmit)="login()" autocomplete="off">
+      
       <div class="form-group">
         <label for="username">Usuario</label>
-        <input type="text" id="username" [(ngModel)]="credentials.username" name="username" placeholder="Ingresa tu usuario" required>
+        <div class="input-wrapper">
+          <span class="input-icon">👤</span>
+          <input 
+            type="text" 
+            id="username" 
+            [(ngModel)]="credentials.username" 
+            name="username" 
+            class="form-control"
+            placeholder="Ej. admin_user" 
+            autocomplete="username"
+            required>
+        </div>
       </div>
 
       <div class="form-group">
         <label for="password">Contraseña</label>
-        <input type="password" id="password" [(ngModel)]="credentials.password" name="password" placeholder="••••••••" required>
+        <div class="input-wrapper">
+          <span class="input-icon">🔑</span>
+          <input 
+            type="password" 
+            id="password" 
+            [(ngModel)]="credentials.password" 
+            name="password" 
+            class="form-control"
+            placeholder="••••••••" 
+            autocomplete="current-password"
+            required>
+        </div>
       </div>
       
-      <div class="error-box" *ngIf="error">
-        {{ error }}
+      <div class="alert-box error" *ngIf="error">
+        <span class="icon">⚠️</span>
+        <span>{{ error }}</span>
       </div>
 
-      <button type="submit" class="btn-login" [disabled]="loading">
-        <span *ngIf="!loading">Ingresar</span>
-        <span *ngIf="loading">Verificando... 🔒</span>
+      <button type="submit" class="btn-primary" [disabled]="loading">
+        <span *ngIf="!loading">Iniciar Sesión</span>
+        <span *ngIf="loading" class="loading-state">
+          <span class="spinner"></span> Verificando...
+        </span>
       </button>
+
     </form>
     
-    <a class="btn-back" [routerLink]="['/']"> 
-    ← Volver al inicio
-</a>
+    <div class="card-footer">
+      <a class="btn-back" [routerLink]="['/']"> 
+        ← Regresar al inicio
+      </a>
+    </div>
+
   </div>
 </div>

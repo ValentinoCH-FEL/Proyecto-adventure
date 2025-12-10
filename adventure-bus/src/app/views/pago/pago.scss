@@ -1,11 +1,22 @@
+@use "sass:color"; // IMPORTANTE: Para funciones modernas de color
+
+// --- VARIABLES ---
 $primary: #011638;
 $secondary: #0077b6;
 $accent: #fca311;
 $bg-light: #f4f7f6;
 $border-color: #e0e0e0;
+$input-bg: #ffffff;
 $success-color: #27ae60;
+$white: #ffffff;
+$danger: #dc3545; 
 
-// CONTENEDOR PRINCIPAL
+// --- RESET BÁSICO ---
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+// --- CONTENEDOR PRINCIPAL ---
 .payment-container {
   width: 95%;
   max-width: 1600px;
@@ -55,7 +66,7 @@ $success-color: #27ae60;
 
 .method-option {
   flex: 1;
-  background: white;
+  background: $white;
   border: 2px solid $border-color;
   border-radius: 12px;
   padding: 25px;
@@ -78,6 +89,7 @@ $success-color: #27ae60;
   &.active {
     border-color: $primary;
     background-color: #f0f8ff;
+    // Modernización: color.scale en lugar de rgba manual si quisieras
     box-shadow: 0 4px 12px rgba(0, 119, 182, 0.1);
     
     // Indicador visual de seleccionado
@@ -94,6 +106,7 @@ $success-color: #27ae60;
   .icon-wrapper {
     font-size: 2.5rem;
     line-height: 1;
+    &.yape-color { color: #bc36ea; }
   }
   
   .text-wrapper {
@@ -114,8 +127,19 @@ $success-color: #27ae60;
 }
 
 // CONTENEDOR FORMULARIO TARJETA
+.card-section {
+    display: flex; 
+    gap: 40px; 
+    align-items: flex-start;
+
+    @media (max-width: 850px) {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+
 .card-form-container {
-  background: white;
+  background: $white;
   padding: 40px;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.04);
@@ -124,245 +148,166 @@ $success-color: #27ae60;
   gap: 40px;
   align-items: flex-start;
 
-  @media (max-width: 850px) {
-    flex-direction: column;
-    align-items: center;
-  }
-
   h3 {
     margin-top: 0;
     color: $primary;
     margin-bottom: 20px;
-    width: 100%; // En móvil
-    display: none; // Ocultamos el título dentro del flex, lo manejamos fuera si quieres
+    width: 100%; 
+    display: none; 
   }
 }
 
-// TARJETA VISUAL (Previsualización)
-.card-visual {
-  width: 320px;
-  height: 200px;
-  flex-shrink: 0;
-  background: linear-gradient(135deg, #02204c 0%, #0077b6 100%);
-  color: white;
-  padding: 25px;
-  border-radius: 16px;
-  position: relative;
-  box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+// TARJETA VISUAL (Previsualización 3D)
+.card-visual-wrapper {
+  perspective: 1000px; width: 320px; height: 200px; flex-shrink: 0;
+}
 
+.credit-card {
+  width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s;
+  border-radius: 16px; box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+  
+  &.flipped { transform: rotateY(180deg); }
+  
+  .card-front, .card-back {
+    position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 16px;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); color: $white; padding: 20px;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  
+  .card-back { transform: rotateY(180deg); padding: 0; justify-content: flex-start; }
+
+  // Frente
+  .card-chip { width: 40px; height: 30px; background: linear-gradient(to bottom right, #e6cfa1, #d4af37); border-radius: 5px; margin-bottom: 10px; position: relative; z-index: 1; border: 1px solid rgba(0,0,0,0.1); }
+  .card-logo { text-align: right; font-weight: 700; font-style: italic; font-size: 1.2rem; }
+  .card-number { font-size: 1.4rem; letter-spacing: 2px; font-family: 'Courier New', monospace; text-shadow: 0 2px 2px rgba(0,0,0,0.3); margin: 10px 0; z-index: 1; }
+  .card-bottom { display: flex; justify-content: space-between; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; .value { display: block; font-size: 0.9rem; margin-top: 2px; font-weight: 600; } }
+  
   // Brillo decorativo
   &::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
-    pointer-events: none;
+    content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%); pointer-events: none;
   }
 
-  .chip {
-    width: 45px;
-    height: 35px;
-    background: linear-gradient(135deg, #ffd700 0%, #d4af37 100%);
-    border-radius: 6px;
-    margin-bottom: 10px;
-    position: relative;
-    z-index: 1;
-    border: 1px solid rgba(0,0,0,0.1);
-  }
-
-  .card-number-preview {
-    font-size: 1.4rem;
-    letter-spacing: 3px;
-    font-family: 'Courier New', monospace;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    z-index: 1;
-  }
-
-  .card-name-preview {
-    text-transform: uppercase;
-    font-size: 0.85rem;
-    letter-spacing: 1px;
-    opacity: 0.9;
-    z-index: 1;
+  // Reverso
+  .magnetic-strip { height: 40px; background: #000; margin-top: 20px; width: 100%; }
+  .cvv-strip { 
+    background: $white; color: #000; margin: 20px; padding: 5px 10px; border-radius: 4px; text-align: right;
+    .label { font-size: 0.6rem; display: block; text-align: right; color: #666; margin-bottom: 2px; }
+    .cvv-box { font-family: 'Courier New', monospace; font-weight: 700; letter-spacing: 2px; }
   }
 }
 
 // FORMULARIO INPUTS
 .form-grid {
-  flex: 1; // Ocupa el resto
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  width: 100%;
+  flex: 1; display: flex; flex-direction: column; gap: 20px; width: 100%;
 }
 
 .form-group {
-  display: flex;
-  flex-direction: column;
+  display: flex; flex-direction: column;
   
   label {
-    font-size: 0.9rem;
-    font-weight: 600;
-    margin-bottom: 8px;
-    color: #555;
+    font-size: 0.9rem; font-weight: 600; margin-bottom: 8px; color: #555;
+  }
+  
+  .input-wrapper {
+     position: relative;
+     .input-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 1rem; opacity: 0.5; }
+     
+     input {
+       width: 100%; padding: 12px 15px 12px 35px; // Padding para icono
+       border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; transition: all 0.2s;
+       &:focus { outline: none; border-color: $secondary; box-shadow: 0 0 0 3px rgba($secondary, 0.1); }
+       &::placeholder { color: #bbb; }
+     }
+  }
+  
+  input { // Fallback para inputs sin wrapper
+    padding: 12px 15px; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; transition: all 0.2s;
+    &:focus { outline: none; border-color: $secondary; box-shadow: 0 0 0 3px rgba($secondary, 0.1); }
   }
 
-  input {
-    padding: 12px 15px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    font-size: 1rem;
-    transition: all 0.2s;
-
-    &:focus {
-      outline: none;
-      border-color: $secondary;
-      box-shadow: 0 0 0 3px rgba($secondary, 0.1);
-    }
-    
-    &::placeholder { color: #bbb; }
-  }
+  .uppercase { text-transform: uppercase; }
 }
 
 .form-row {
-  display: flex;
-  gap: 20px;
+  display: flex; gap: 20px;
   .half { flex: 1; }
 }
 
 // YAPE QR
 .qr-container {
-  background: white;
-  padding: 50px;
-  border-radius: 12px;
-  text-align: center;
-  border: 1px solid $border-color;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+  background: $white; padding: 50px; border-radius: 12px; text-align: center;
+  border: 1px solid $border-color; box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+  display: flex; justify-content: center; margin-top: 20px;
   
-  .qr-placeholder {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-
+  .qr-card {
+    // Estilos internos de la tarjeta QR
     .qr-box {
-      width: 200px;
-      height: 200px;
-      background-color: #f8f9fa;
-      border: 2px dashed #ddd;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #ccc;
-      border-radius: 10px;
+      width: 200px; height: 200px; background-color: #f8f9fa; border: 2px dashed #ddd;
+      display: flex; align-items: center; justify-content: center; color: #ccc; border-radius: 10px;
+      img { border-radius: 8px; }
     }
-
-    p {
-      font-weight: 600;
-      color: #555;
-      max-width: 300px;
-      margin: 0 auto;
-    }
+    .amount-display { font-size: 1.8rem; font-weight: 800; color: $primary; margin: 10px 0; }
+    .instruction { font-weight: 600; color: #555; max-width: 300px; margin: 0 auto; }
   }
 }
 
 // --- COLUMNA DERECHA (RESUMEN) ---
 .sidebar-column {
-  flex: 1;
-  min-width: 380px;
-  max-width: 450px; // Limitar ancho en pantallas muy grandes
+  flex: 1; min-width: 380px; max-width: 450px;
 }
 
 .summary-card {
-  background: white;
-  padding: 30px;
-  border-radius: 12px;
-  border: 1px solid $border-color;
-  box-shadow: 0 4px 25px rgba(0,0,0,0.06);
-  position: sticky;
-  top: 20px;
+  background: $white; padding: 30px; border-radius: 12px; border: 1px solid $border-color;
+  box-shadow: 0 4px 25px rgba(0,0,0,0.06); position: sticky; top: 20px;
 
   h3 {
-    margin-top: 0;
-    color: $primary;
-    border-bottom: 3px solid $secondary;
-    padding-bottom: 15px;
-    display: inline-block;
-    margin-bottom: 25px;
-    font-size: 1.3rem;
+    margin-top: 0; color: $primary; border-bottom: 3px solid $secondary;
+    padding-bottom: 15px; display: inline-block; margin-bottom: 25px; font-size: 1.3rem;
   }
 
   .trip-summary {
     margin-bottom: 25px;
-    
     .route {
-      font-size: 1.1rem;
-      color: $primary;
-      margin-bottom: 8px;
-      display: flex;
-      justify-content: space-between; // Separar origen y destino visualmente
+      font-size: 1.1rem; color: $primary; margin-bottom: 8px;
+      display: flex; justify-content: space-between;
+      .point { display: flex; align-items: center; gap: 5px; font-weight: 700; }
+      .dot { width: 8px; height: 8px; border-radius: 50%; &.origin {background: $secondary;} &.dest {background: $accent;} }
+      .line { flex: 1; border-bottom: 1px dashed #ccc; margin: 0 5px; position: relative; top: -4px; }
     }
-    
     .date-info {
-      color: #666;
-      font-size: 0.95rem;
-      background: #f8f9fa;
-      padding: 10px;
-      border-radius: 6px;
-      text-align: center;
+      color: #666; font-size: 0.95rem; background: #f8f9fa; padding: 10px;
+      border-radius: 6px; text-align: center;
     }
   }
 
-  .divider {
-    height: 1px;
-    background-color: #eee;
-    margin: 25px 0;
-  }
+  .divider { height: 1px; background-color: #eee; margin: 25px 0; }
 
   .price-breakdown .row {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 12px;
-    color: #555;
-    font-size: 0.95rem;
-    
-    span:last-child {
-      font-weight: 600;
-      color: #333;
-    }
+    display: flex; justify-content: space-between; margin-bottom: 12px;
+    color: #555; font-size: 0.95rem;
+    span:last-child { font-weight: 600; color: #333; }
   }
 
   .total-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 25px;
-    padding-top: 20px;
-    border-top: 2px dashed #ddd;
-    
-    span {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: #333;
-    }
-    
-    .amount {
-      font-size: 1.8rem;
-      color: $primary;
-      font-weight: 800;
-    }
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 25px; padding-top: 20px; border-top: 2px dashed #ddd;
+    span { font-size: 1.1rem; font-weight: 700; color: #333; }
+    .amount { font-size: 1.8rem; color: $primary; font-weight: 800; }
+  }
+
+  // TÉRMINOS Y CONDICIONES
+  .terms-check {
+    margin: 20px 0; font-size: 0.85rem; color: #555;
+    label { display: flex; gap: 10px; cursor: pointer; align-items: flex-start; }
+    input { margin-top: 3px; }
+    a { color: $secondary; text-decoration: none; &:hover { text-decoration: underline; } }
   }
 
   .btn-pay {
     width: 100%;
-    background-color: $success-color; // Verde fuerte para acción final
-    color: white;
+    background-color: $success-color;
+    color: $white;
     font-weight: 700;
     font-size: 1.1rem;
     padding: 18px;
@@ -374,9 +319,11 @@ $success-color: #27ae60;
     box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3);
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    display: flex; justify-content: center; align-items: center; gap: 10px;
 
-    &:hover {
-      background-color: darken($success-color, 8%);
+    // Modernización de funciones de color
+    &:hover:not(:disabled) {
+      background-color: color.scale($success-color, $lightness: -8%);
       transform: translateY(-2px);
       box-shadow: 0 6px 15px rgba(39, 174, 96, 0.4);
     }
@@ -387,17 +334,21 @@ $success-color: #27ae60;
       transform: none;
       box-shadow: none;
     }
+    
+    .spinner { animation: spin 1s linear infinite; display: inline-block; }
   }
 
   .security-badge {
-    text-align: center;
-    color: #888;
-    font-size: 0.85rem;
-    margin-top: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    opacity: 0.8;
+    text-align: center; color: #888; font-size: 0.85rem; margin-top: 20px;
+    display: flex; align-items: center; justify-content: center; gap: 8px; opacity: 0.8;
+    .lock-icon { font-size: 1.2rem; }
   }
+}
+
+@keyframes spin { 100% { transform: rotate(360deg); } }
+
+// RESPONSIVE
+@media (max-width: 992px) {
+  .payment-container { grid-template-columns: 1fr; }
+  .card-section { flex-direction: column; align-items: center; }
 }

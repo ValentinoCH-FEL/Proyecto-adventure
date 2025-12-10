@@ -18,6 +18,10 @@ export class PagoComponent implements OnInit {
   reservaData: any = null;
   procesandoPago: boolean = false;
   metodoPago: string = 'TARJETA';
+  aceptarTerminos: boolean = false;
+
+  // Estado de la tarjeta visual
+  isCardFlipped: boolean = false;
 
   datosTarjeta = {
     numero: '', 
@@ -31,61 +35,101 @@ export class PagoComponent implements OnInit {
   }
 
   cargarDatos() {
-    const data = localStorage.getItem('reserva_temporal');
-    if (data) {
-      this.reservaData = JSON.parse(data);
-    } else {
+    try {
+      const data = localStorage.getItem('reserva_temporal');
+      if (data) {
+        this.reservaData = JSON.parse(data);
+        // Validación básica
+        if (!this.reservaData.total) {
+           this.router.navigate(['/']);
+        }
+      } else {
+        this.router.navigate(['/']);
+      }
+    } catch (e) {
+      console.error("Error leyendo localStorage", e);
       this.router.navigate(['/']);
     }
   }
 
+  // --- FORMATO VISUAL TARJETA ---
+  formatCardNumber(event: any) {
+    let input = event.target.value.replace(/\D/g, '').substring(0, 16);
+    input = input.match(/.{1,4}/g)?.join(' ') || input;
+    this.datosTarjeta.numero = input;
+  }
+
+  formatExpiry(event: any) {
+    let input = event.target.value.replace(/\D/g, '').substring(0, 4);
+    if (input.length >= 3) {
+      input = input.substring(0, 2) + '/' + input.substring(2, 4);
+    }
+    this.datosTarjeta.vencimiento = input;
+  }
+
+  getCardType(): string {
+    const num = this.datosTarjeta.numero.replace(/\s/g, '');
+    if (/^4/.test(num)) return 'VISA';
+    if (/^5[1-5]/.test(num)) return 'MASTERCARD';
+    if (/^3[47]/.test(num)) return 'AMEX';
+    return 'TARJETA';
+  }
+
   procesarPago() {
-    
-    // Si no hay datos de reserva, fallamos antes de llamar a la API
+    // Validaciones
     if (!this.reservaData) {
-        alert("Error: No se encontraron datos de la reserva. Vuelve al inicio.");
+        alert("Error: Datos de sesión perdidos.");
         this.router.navigate(['/']);
         return;
     }
 
-    // 1. Validaciones básicas de formulario (si eligió tarjeta)
+    if (!this.aceptarTerminos) {
+        alert("Debes aceptar los Términos y Condiciones para continuar.");
+        return;
+    }
+
     if (this.metodoPago === 'TARJETA') {
-        if (!this.datosTarjeta.numero || !this.datosTarjeta.cvv) {
-            alert("Por favor ingresa los datos de tu tarjeta.");
+        if (this.datosTarjeta.numero.length < 16 || !this.datosTarjeta.cvv || !this.datosTarjeta.vencimiento) {
+            alert("Por favor completa los datos de tu tarjeta correctamente.");
             return;
         }
     }
 
     this.procesandoPago = true;
 
-    // 2. Estructura de la orden que se envía al Backend
+    // Construcción del objeto de compra
     const ordenCompra = {
-        busId: this.reservaData.bus.id,
-        fechaViaje: this.reservaData.fecha,
+        busId: this.reservaData.busId || this.reservaData.bus?.id,
+        fechaViaje: this.reservaData.fechaViaje || this.reservaData.fecha,
         total: this.reservaData.total,
         metodoPago: this.metodoPago,
-        // Lo más importante: Enviamos la lista de pasajeros completa
         pasajeros: this.reservaData.pasajeros, 
     };
     
-    // 3. LLAMADA REAL AL BACKEND
+    // Llamada al Backend
     this.compraService.procesarCompra(ordenCompra).subscribe({
       next: (respuesta) => {
-        console.log("DIAGNÓSTICO: Backend respondió con éxito:", respuesta); // Mensaje de éxito
-
-        // Éxito: Redirigir a la pantalla de confirmación
-        this.router.navigate(['/confirmacion']); 
+        console.log("Compra Exitosa:", respuesta);
+        
+        localStorage.removeItem('reserva_temporal'); 
+        
+        // REDIRECCIÓN CON ESTADO
+        this.router.navigate(['/confirmacion'], { 
+          state: { 
+            datosCompra: respuesta 
+          } 
+        });
       },
       error: (err) => {
         this.procesandoPago = false;
-        
-        // --- LOG DE FALLO DE CONEXIÓN ---
-        console.error("DIAGNÓSTICO: Fallo en la solicitud HTTP:", err);
+        console.error("Error en pago:", err);
         
         let msg = 'Error de conexión o servidor.';
-        if (err.status === 409) msg = "Asiento ya fue reservado. Vuelve a selección.";
+        if (err.status === 409) {
+           msg = "Lo sentimos, uno de los asientos seleccionados ya fue reservado por otra persona.";
+        }
         
-        alert(`❌ Error en la Transacción: ${msg}. Revisa la consola F12 (Network) y la terminal de Node.js.`);
+        alert(`❌ Error: ${msg}`);
       }
     });
   }

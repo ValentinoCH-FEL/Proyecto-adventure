@@ -1,190 +1,471 @@
-$primary: #011638;
-$secondary: #0077b6;
-$accent: #fca311;
-$bg-light: #f9f9f9;
-$danger: #dc3545;
-$success: #28a745;
-$text-color: #333;
+@use "sass:color";
 
+// ===========================================================
+// 1. VARIABLES Y SISTEMA DE DISEÑO MODERNIZADO
+// ===========================================================
+$primary: #0f172a;       // Azul oscuro profundo (Slate 900) - Más elegante
+$secondary: #0ea5e9;     // Azul cielo vibrante (Sky 500)
+$accent: #f59e0b;        // Ámbar
+$danger: #ef4444;        // Rojo suave
+$success: #10b981;       // Esmeralda
+$bg-page: #f8fafc;       // Fondo muy claro
+$white: #ffffff;
+
+// Grises neutrales para bordes y fondos
+$gray-50: #f8fafc;
+$gray-100: #f1f5f9;
+$gray-200: #e2e8f0;      // Borde suave
+$gray-300: #cbd5e1;
+$gray-400: #94a3b8;      // Textos secundarios
+$gray-500: #64748b;
+$text-main: #334155;     // Texto principal (Slate 700)
+
+// Sombras modernas (Elevation)
+$shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+$shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+$shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+// ===========================================================
+// 2. LAYOUT PRINCIPAL
+// ===========================================================
 .autogestion-container {
   min-height: 100vh;
-  background-color: $bg-light;
+  background-color: $bg-page;
   display: flex;
   justify-content: center;
-  align-items: flex-start;
-  padding: 80px 20px;
-  font-family: 'Segoe UI', sans-serif;
+  align-items: center; // Centrado vertical y horizontal
+  padding: 40px 20px;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 .content-card {
-  background: white;
-  padding: 40px;
-  border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+  background: $white;
   width: 100%;
-  max-width: 600px;
+  max-width: 720px; // Un poco más ancho para dar espacio
+  border-radius: 24px; // Bordes más redondeados (Moderno)
+  box-shadow: $shadow-lg;
+  border: 1px solid $white;
+  overflow: hidden;
+  position: relative;
+  animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+// BOTÓN "VOLVER" (X)
+.btn-close-home {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: transparent;
+  border: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px; // Cuadrado redondeado
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $gray-400;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+  font-size: 1.5rem;
+
+  &:hover {
+    background-color: $gray-100;
+    color: $danger;
+    transform: rotate(90deg);
+  }
+}
+
+.card-header-section {
   text-align: center;
-  border: 1px solid #eee;
+  padding: 48px 40px 20px; // Más padding superior
+
+  .title {
+    color: $primary;
+    font-size: 1.75rem;
+    font-weight: 800;
+    margin: 0 0 12px;
+    letter-spacing: -0.5px;
+  }
+
+  .subtitle {
+    color: $gray-500;
+    font-size: 1rem;
+    margin: 0 auto;
+    line-height: 1.6;
+    max-width: 90%;
+  }
 }
 
-.title {
-  color: $primary;
-  font-size: 2rem;
-  font-weight: 800;
-  margin-bottom: 5px;
-}
+// ===========================================================
+// 3. FORMULARIO DE BÚSQUEDA
+// ===========================================================
+.search-section {
+  padding: 30px 48px 50px; // Más espacio lateral
 
-.subtitle {
-  color: #666;
-  margin-bottom: 30px;
-}
+// Busca esta sección dentro de .search-section y REEMPLÁZALA:
+  
+  .inputs-row {
+    display: grid;
+    grid-template-columns: 1fr; 
+    gap: 24px; 
+    margin-bottom: 24px;
+    align-items: start;
+  }
+  .form-group {
+    text-align: left;
+    margin-bottom: 0;
 
-// --- FORMULARIO ---
-.search-form-wrapper {
-    width: 100%;
-    
-    .form-group {
-      text-align: left;
-      margin-bottom: 20px;
-      
-      label {
-        display: block;
-        font-weight: 600;
-        color: #555;
-        margin-bottom: 8px;
+    label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: $text-main;
+      margin-bottom: 10px; // Espacio entre label e input
+      margin-left: 4px;
+    }
+
+    .input-wrapper {
+      position: relative;
+
+      .icon {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 1.2rem;
+        color: $gray-400;
+        transition: color 0.3s;
+        pointer-events: none;
       }
-      
-      input {
-        width: 100%;
-        padding: 12px;
-        border: 2px solid #ddd;
-        border-radius: 6px;
-        font-size: 1rem;
-        
+
+      .form-control {
+        width: 90%;
+        padding: 14px 16px 14px 48px; // Padding generoso para que el texto respire
+        border: 2px solid $gray-200; // Borde sutil inicial
+        border-radius: 12px;
+        font-size: 0.95rem;
+        color: $primary;
+        background-color: $white;
+        transition: all 0.25s ease;
+        box-shadow: $shadow-sm;
+
+        // Estilo específico para el input de código
+        &[id="codigo"] {
+          text-transform: uppercase;
+          letter-spacing: 1.5px;
+          font-weight: 700;
+          font-family: monospace; // Fuente monoespaciada para códigos
+        }
+
+        &::placeholder {
+          color: $gray-300;
+          font-weight: 400;
+          letter-spacing: 0;
+          text-transform: none;
+        }
+
+        // ESTADO FOCUS (Clave para que se vea profesional)
         &:focus {
           outline: none;
+          background-color: $white;
           border-color: $secondary;
-          box-shadow: 0 0 0 3px rgba($secondary, 0.15);
+          // Anillo de luz difuso en lugar de borde duro
+          box-shadow: 0 0 0 4px rgba($secondary, 0.15);
+          
+          ~ .icon {
+            color: $secondary; // El icono se ilumina
+          }
+        }
+        
+        &:hover {
+          border-color: $gray-300;
         }
       }
     }
+  }
 
-    .error-box {
-      background: #f8d7da;
-      color: $danger;
-      padding: 10px;
-      border-radius: 4px;
-      margin-bottom: 20px;
-      border: 1px solid $danger;
-      text-align: center;
-    }
-
-    .btn-primary {
-      background: $secondary;
-      color: white;
-      padding: 14px;
-      border: none;
-      border-radius: 8px;
-      width: 100%;
-      font-size: 1.1rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: background 0.3s;
-      
-      &:hover:not(:disabled) { background: darken($secondary, 10%); }
-      &:disabled { background: #ccc; cursor: not-allowed; }
-    }
-}
-
-
-// --- RESULTADOS ---
-.results-wrapper {
+  .btn-search {
     width: 100%;
+    // Color sólido con sombra suave (más moderno que degradados fuertes)
+    background-color: $secondary;
+    color: $white;
+    border: none;
+    padding: 16px;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-top: 20px;
+    box-shadow: 0 4px 6px rgba($secondary, 0.25);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+
+    &:hover:not(:disabled) {
+      transform: translateY(-2px);
+      background-color: color.scale($secondary, $lightness: -5%);
+      box-shadow: 0 8px 15px rgba($secondary, 0.3);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    &:disabled {
+      background: $gray-200;
+      color: $gray-400;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+  }
 }
 
-.result-title {
-  color: $primary;
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-bottom: 25px;
-  border-bottom: 2px solid #eee;
-  padding-bottom: 10px;
+// ===========================================================
+// 4. ALERTAS Y MENSAJES (Refinado)
+// ===========================================================
+.alert-box {
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  line-height: 1.5;
+
+  &.error {
+    background-color: #fef2f2; // Rojo muy pálido (Tailwind red-50)
+    border: 1px solid #fee2e2;
+    color: #991b1b; // Rojo oscuro para texto
+    
+    i, svg {
+      color: $danger;
+      font-size: 1.2rem;
+    }
+  }
 }
 
-.details-grid {
+// ===========================================================
+// 5. RESULTADOS (TICKET DIGITAL)
+// ===========================================================
+.results-section {
+  padding: 0 0 40px;
+}
+
+.status-banner {
+  padding: 24px;
+  text-align: center;
+  background-color: $gray-50;
+  border-bottom: 1px solid $gray-200;
+  border-top: 1px solid $gray-200;
+  margin-bottom: 30px;
+
+  h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  small {
+    display: block;
+    margin-top: 8px;
+    font-family: monospace;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: $gray-500;
+  }
+
+  &.confirmada {
+    background-color: #ecfdf5; // Verde muy suave
+    color: #047857;
+    border-left: none; // Quitamos el borde lateral antiguo
+    border-bottom-color: #d1fae5;
+  }
+
+  &.cancelada {
+    background-color: #fef2f2;
+    color: $danger;
+    border-bottom-color: #fee2e2;
+  }
+}
+
+.ticket-details-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  text-align: left;
-  margin-bottom: 30px;
-  padding: 15px;
-  background: #f8f8f8;
-  border-radius: 8px;
-  
+  gap: 20px; // Más espacio entre celdas
+  padding: 0 48px;
+
   .detail-item {
-    padding: 10px 0;
-    border-bottom: 1px dashed #eee;
-    
-    &:nth-child(even) { border-bottom: none; } // Quitar el borde al segundo elemento si es par
+    background: $white;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid $gray-200;
+    transition: transform 0.2s;
+
+    &:hover {
+      border-color: $gray-300;
+    }
+
+    &.full-width {
+      grid-column: span 2;
+    }
 
     .label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: $gray-500;
       display: block;
-      color: #888;
-      font-size: 0.85rem;
-      font-weight: 600;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
     }
-    
+
     .value {
       font-size: 1rem;
-      font-weight: 700;
-      color: $text-color;
+      color: $primary;
+      font-weight: 600;
+      display: block;
+    }
 
-      &.highlight { color: $secondary; }
-      
-      &.status {
-          font-size: 0.9rem;
-          padding: 4px 8px;
-          border-radius: 4px;
-          font-weight: 700;
-          display: inline-block;
-          
-          &.confirmada { background: lighten($success, 30%); color: $success; }
-          &.cancelada { background: lighten($danger, 20%); color: $danger; }
+    // Estilo visual para la ruta
+    .route-visual {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: $primary;
+
+      .arrow {
+        color: $accent;
+        font-size: 1.2rem;
+      }
+    }
+
+    // Cajas destacadas (Asiento y Precio)
+    &.highlight-box {
+      background: #f0f9ff; // Azul muy claro
+      border: 1px solid #bae6fd;
+      text-align: center;
+
+      .label {
+        color: $secondary;
+      }
+
+      .value.price {
+        font-size: 1.4rem;
+        color: $primary;
+        font-weight: 800;
+      }
+
+      .value.seat {
+        font-size: 1.4rem;
+        color: $text-main;
       }
     }
   }
 }
 
-.actions {
+// ===========================================================
+// 6. PIE DE PÁGINA (ACCIONES)
+// ===========================================================
+.actions-footer {
+  margin-top: 40px;
+  padding: 0 48px;
   display: flex;
-  gap: 20px;
-  justify-content: center;
-  
-  .btn-cancel {
-    background: $danger;
-    color: white;
-    padding: 12px 25px;
-    border-radius: 6px;
-    font-weight: 700;
-    border: none;
+  flex-direction: column;
+  gap: 16px;
+
+  button {
+    width: 100%;
+    padding: 16px;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 600;
     cursor: pointer;
-    transition: background 0.3s;
-    
-    &:hover:not(:disabled) { background: darken($danger, 10%); }
-    &:disabled { background: #ccc; cursor: not-allowed; }
+    border: none;
+    transition: all 0.2s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+
+    &.btn-cancel {
+      background: $white;
+      border: 1px solid $danger;
+      color: $danger;
+
+      &:hover {
+        background: #fef2f2;
+        box-shadow: 0 4px 10px rgba($danger, 0.1);
+      }
+    }
+
+    &.btn-back {
+      background: $gray-100;
+      color: $text-main;
+
+      &:hover {
+        background: $gray-200;
+      }
+    }
+  }
+}
+
+// ===========================================================
+// 7. ANIMACIONES Y RESPONSIVE
+// ===========================================================
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 640px) {
+  .autogestion-container {
+    padding: 15px;
+    align-items: flex-start;
+  }
+
+  .content-card {
+    border-radius: 16px;
   }
   
-  .btn-secondary {
-    background: #f0f0f0;
-    color: #555;
-    padding: 12px 25px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background 0.3s;
+  .card-header-section {
+    padding: 30px 20px 10px;
+  }
 
-    &:hover { background: #e0e0e0; }
+  .search-section {
+    padding: 20px 25px 40px;
+
+    .inputs-row {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+  }
+
+  .ticket-details-grid {
+    padding: 0 25px;
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .detail-item.full-width {
+    grid-column: span 1;
+  }
+  
+  .actions-footer {
+    padding: 0 25px;
   }
 }

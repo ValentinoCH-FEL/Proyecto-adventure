@@ -3,106 +3,184 @@
     
     <!-- HEADER DEL VIAJE -->
     <header class="trip-header">
-      <div class="route-info">
-        <h2>{{ data.rutaOrigen }} <i class="arrow">➝</i> {{ data.rutaDestino }}</h2>
-        <div class="meta">
-          <span class="badge">{{ data.tipoServicio }}</span>
-          <span>📅 {{ fechaViaje() }}</span>
-          <span>🕒 {{ data.horaSalida }}</span>
+      <div class="header-content">
+        <div class="route-display">
+          <span class="city">{{ data.rutaOrigen }}</span>
+          <span class="separator">
+            <span class="dashed-line"></span>
+            <span class="bus-icon">🚌</span>
+          </span>
+          <span class="city">{{ data.rutaDestino }}</span>
         </div>
-      </div>
-      <div class="bus-info">
-        <small>Unidad: {{ data.placa }}</small>
+        
+        <div class="trip-meta">
+          <div class="meta-item">
+            <span class="label">Servicio</span>
+            <span class="value badge">{{ data.tipoServicio }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="label">Fecha</span>
+            <span class="value">{{ fechaViaje() | date:'fullDate' }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="label">Hora</span>
+            <span class="value">{{ data.horaSalida }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="label">Placa</span>
+            <span class="value">{{ data.placa }}</span>
+          </div>
+        </div>
       </div>
     </header>
 
-    <div class="content-wrapper">
+    <div class="selection-layout">
       
       <!-- COLUMNA IZQUIERDA: EL MAPA DEL BUS -->
-      <div class="bus-section">
+      <div class="bus-container">
         
-        <!-- Pestañas de Pisos -->
-        <div class="floor-tabs">
-          @if (piso2().length > 0) {
-            <button [class.active]="pisoActivo() === 1" (click)="cambiarPiso(1)">Piso 1 (VIP)</button>
-            <button [class.active]="pisoActivo() === 2" (click)="cambiarPiso(2)">Piso 2 (Económico)</button>
+        <!-- CONTROL DE PISOS (Solo si > 60 asientos) -->
+        <div class="floor-selector">
+          @if (data.capacidadTotal > 60) {
+            <button 
+              class="floor-btn" 
+              [class.active]="pisoActivo() === 1" 
+              (click)="cambiarPiso(1)">
+              <span class="floor-name">Primer Piso</span>
+              <span class="floor-desc">Sofá Cama 160°</span>
+            </button>
+            <button 
+              class="floor-btn" 
+              [class.active]="pisoActivo() === 2" 
+              (click)="cambiarPiso(2)">
+              <span class="floor-name">Segundo Piso</span>
+              <span class="floor-desc">Semicama 140°</span>
+            </button>
           } @else {
-            <button class="active">Único Piso</button>
+            <div class="single-floor-badge">
+              <span>Bus de Piso Único</span>
+            </div>
           }
         </div>
 
-        <!-- El Gráfico del Bus -->
+        <!-- CHASIS DEL BUS -->
         <div class="bus-chassis">
+          <!-- Cabina del Conductor -->
           <div class="driver-cabin">
-            <span class="steering-wheel">⭕</span> Conductor
+            <div class="wheel-icon">⭕</div>
+            <span class="driver-label">Conductor</span>
           </div>
           
-          <div class="seats-grid">
+          <!-- Rejilla de Asientos -->
+          <div class="seats-grid" [class.single-floor]="data.capacidadTotal <= 60">
             <!-- Renderiza la lista del piso activo -->
             @for (asiento of (pisoActivo() === 1 ? piso1() : piso2()); track asiento.numero) {
-              <div 
-                class="seat" 
+              <button 
+                class="seat-item" 
                 [ngClass]="asiento.estado"
-                (click)="toggleAsiento(asiento)">
+                [disabled]="asiento.estado === 'ocupado'"
+                (click)="toggleAsiento(asiento)"
+                [title]="asiento.estado === 'ocupado' ? 'Asiento Ocupado' : 'Asiento ' + asiento.numero + ' - S/' + asiento.precio">
                 
-                <span class="seat-num">{{ asiento.numero }}</span>
+                <div class="seat-shape">
+                  <div class="headrest"></div>
+                  <div class="bodyrest"></div>
+                  @if (asiento.estado === 'ocupado') {
+                    <span class="status-icon">🔒</span>
+                  } @else if (asiento.estado === 'seleccionado') {
+                    <span class="status-icon">✓</span>
+                  }
+                </div>
                 
-                <!-- Solo mostramos precio si está libre -->
+                <span class="seat-number">{{ asiento.numero }}</span>
+                
                 @if (asiento.estado === 'libre') {
-                   <span class="seat-price">S/{{ asiento.precio | number:'1.0-0' }}</span>
+                  <span class="seat-price">S/{{ asiento.precio | number:'1.0-0' }}</span>
                 }
-              </div>
+              </button>
+            }
+          </div>
+
+          <!-- Elementos decorativos traseros (Baño/Escalera) -->
+          <div class="bus-rear">
+            <div class="utility-box wc" title="Servicios Higiénicos">🚾</div>
+            @if (data.capacidadTotal > 60) {
+              <div class="utility-box stairs" title="Escaleras">🪜</div>
             }
           </div>
         </div>
 
-        <div class="legend">
-          <div class="legend-item"><span class="dot free"></span> Libre</div>
-          <div class="legend-item"><span class="dot occupied"></span> Ocupado</div>
-          <div class="legend-item"><span class="dot selected"></span> Tu asiento</div>
+        <!-- LEYENDA -->
+        <div class="legend-bar">
+          <div class="legend-item">
+            <div class="seat-mini free"></div>
+            <span>Libre</span>
+          </div>
+          <div class="legend-item">
+            <div class="seat-mini selected"></div>
+            <span>Seleccionado</span>
+          </div>
+          <div class="legend-item">
+            <div class="seat-mini occupied"></div>
+            <span>Ocupado</span>
+          </div>
         </div>
       </div>
 
-      <!-- COLUMNA DERECHA: RESUMEN DE COMPRA -->
-      <div class="summary-section">
-        <h3>Resumen de Compra</h3>
-        
-        <div class="selected-list">
-          @if (seleccionados().length === 0) {
-            <p class="empty-msg">Selecciona tus asientos en el mapa para continuar.</p>
-          } @else {
-            <ul>
-              @for (item of seleccionados(); track item.numero) {
-                <li>
-                  <div class="seat-detail">
-                    <strong>Asiento {{ item.numero }}</strong>
-                    <small>Piso {{ item.piso }}</small>
-                  </div>
-                  <span class="price">S/ {{ item.precio | number:'1.2-2' }}</span>
-                </li>
-              }
-            </ul>
-          }
-        </div>
+      <!-- COLUMNA DERECHA: RESUMEN FLOTANTE -->
+      <div class="summary-panel">
+        <div class="summary-card">
+          <div class="card-header">
+            <h3>Tu Compra</h3>
+            <span class="seat-count">{{ seleccionados().length }} asientos</span>
+          </div>
+          
+          <div class="selected-seats-container">
+            @if (seleccionados().length === 0) {
+              <div class="empty-state">
+                <span class="icon">💺</span>
+                <p>Selecciona tus asientos en el mapa para continuar.</p>
+              </div>
+            } @else {
+              <ul class="seats-list">
+                @for (item of seleccionados(); track item.numero) {
+                  <li class="seat-row">
+                    <div class="seat-info">
+                      <span class="number">Asiento {{ item.numero }}</span>
+                      <span class="floor-tag">Piso {{ item.piso }}</span>
+                    </div>
+                    <div class="price-info">
+                      S/ {{ item.precio | number:'1.2-2' }}
+                      <button class="remove-btn" (click)="toggleAsiento(item)">×</button>
+                    </div>
+                  </li>
+                }
+              </ul>
+            }
+          </div>
 
-        <div class="total-row">
-          <span>Total a Pagar</span>
-          <span class="total-amount">S/ {{ totalPagar() | number:'1.2-2' }}</span>
-        </div>
+          <div class="checkout-footer">
+            <div class="total-section">
+              <span>Total a Pagar</span>
+              <span class="amount">S/ {{ totalPagar() | number:'1.2-2' }}</span>
+            </div>
 
-        <button 
-          class="btn-checkout" 
-          [disabled]="seleccionados().length === 0"
-          (click)="irAPagar()">
-          CONTINUAR CON LOS DATOS
-        </button>
+            <button 
+              class="btn-primary-action" 
+              [disabled]="seleccionados().length === 0"
+              (click)="irAPagar()">
+              CONTINUAR COMPRA ➝
+            </button>
+          </div>
+        </div>
       </div>
 
     </div>
 
   } @else {
-    <div class="loading-state">
-      <div class="spinner"></div>
+    <!-- SKELETON LOADER MIENTRAS CARGA -->
+    <div class="loading-container">
+      <div class="loader"></div>
       <p>Cargando mapa del bus...</p>
     </div>
   }

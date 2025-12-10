@@ -1,23 +1,14 @@
 <header class="header">
-  <!-- Wrapper para centrar y limitar el ancho de la navegación -->
   <div class="header-content-wrapper">
     <nav class="navbar">
-      <div class="logo">Adventure</div>
+      <div class="logo">Adventure <span class="dot">.</span></div>
       <ul class="menu">
         <li>
-          <!-- ENLACE ACTIVO A AUTOGESTIÓN -->
           <a routerLink="./autogestion">Autogestión</a>
         </li>
         <li>
-          <a routerLink="/contacto">Contacto</a>
-        </li>
-        <li class="language-selector">
-          <label for="language-select">Idioma:</label>
-          <select id="language-select" (change)="cambiarIdioma($event)">
-            <option value="es">🇪🇸 ES</option>
-            <option value="en">🇬🇧 EN</option>
-            <option value="pt">🇧🇷 PT</option>
-          </select>
+          <!-- Botón que abre el modal de contacto -->
+          <a (click)="openContactModal()" class="nav-link-btn">Contacto</a>
         </li>
         <li>
           <a routerLink="/admin-login" class="btn-admin">Admin</a>
@@ -25,123 +16,313 @@
       </ul>
     </nav>
   </div>
-
-  <!-- BUSCADOR -->
-  <div class="buscador">
-    <form (ngSubmit)="buscarViaje()" class="form-busqueda" aria-label="Formulario de búsqueda de viajes">
-      
-      <div class="campo input-origen"> 
-        <input type="text" id="origen" name="origen" placeholder="Buscar Origen" [(ngModel)]="busqueda.origen" required>
-      </div>
-
-      <div class="icono">⇄</div>
-
-      <div class="campo input-destino">
-        <input type="text" id="destino" name="destino" placeholder="Buscar Destino" [(ngModel)]="busqueda.destino" required>
-      </div>
-
-      <div class="campo fecha-selector">
-        <div class="opciones-fecha">
-          <button type="button" (click)="seleccionarHoy()">Hoy</button>
-          <button type="button" (click)="seleccionarManana()">Mañana</button>
-          <input type="date" name="fecha" [(ngModel)]="busqueda.fecha" required>
-        </div>
-      </div>
-
-      <button type="submit" class="btn-buscar">
-        🔍 Buscar
-      </button>
-    </form>
-  </div>
 </header>
 
-<main class="main-content">
-  
+<main class="main-content-wrapper">
+
   <!-- ========================================== -->
-  <!-- SECCIÓN DE RESULTADOS DE BÚSQUEDA          -->
+  <!-- HERO SECTION: IMAGEN + BUSCADOR FLOTANTE -->
   <!-- ========================================== -->
-  <div class="container-resultados" *ngIf="resultadosBusqueda.length > 0 || mensajeSinResultados || buscando">
+  <section class="hero-section">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <h1>Tu viaje comienza aquí</h1>
+      <p>Conecta con los mejores destinos del Perú con seguridad y confort.</p>
+
+      <!-- BUSCADOR FLOTANTE -->
+      <div class="buscador-card">
+        <form (ngSubmit)="buscarViaje()" class="form-busqueda" autocomplete="off">
+          
+          <!-- CAMPO ORIGEN CON AUTOCOMPLETADO -->
+          <div class="input-group">
+            <label>Origen</label>
+            <div class="input-wrapper relative">
+              <span class="icon">📍</span>
+              <input type="text" 
+                     name="origen" 
+                     placeholder="¿De dónde sales?" 
+                     [(ngModel)]="busqueda.origen" 
+                     (input)="onInputBusqueda('origen')"
+                     (focus)="mostrarSugerenciasOrigen = true"
+                     (blur)="ocultarSugerencias('origen')"
+                     required>
+              
+              <!-- Lista desplegable de sugerencias -->
+              <ul class="autocomplete-list" *ngIf="mostrarSugerenciasOrigen && sugerenciasOrigen.length > 0">
+                <li *ngFor="let ciudad of sugerenciasOrigen" (click)="seleccionarSugerencia('origen', ciudad)">
+                  📍 {{ ciudad }}
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- BOTÓN SWAP CON FUNCIONALIDAD -->
+          <!-- Se añade la clase 'rotated' condicionalmente y el evento click -->
+          <button type="button" 
+                  class="btn-swap" 
+                  [class.rotated]="isRotated"
+                  (click)="intercambiarRuta()" 
+                  title="Intercambiar origen y destino">
+            ⇄
+          </button>
+
+          <!-- CAMPO DESTINO CON AUTOCOMPLETADO -->
+          <div class="input-group">
+            <label>Destino</label>
+            <div class="input-wrapper relative">
+              <span class="icon">🗺️</span>
+              <input type="text" 
+                     name="destino" 
+                     placeholder="¿A dónde vas?" 
+                     [(ngModel)]="busqueda.destino" 
+                     (input)="onInputBusqueda('destino')"
+                     (focus)="mostrarSugerenciasDestino = true"
+                     (blur)="ocultarSugerencias('destino')"
+                     required>
+
+              <!-- Lista desplegable de sugerencias -->
+              <ul class="autocomplete-list" *ngIf="mostrarSugerenciasDestino && sugerenciasDestino.length > 0">
+                <li *ngFor="let ciudad of sugerenciasDestino" (click)="seleccionarSugerencia('destino', ciudad)">
+                   🗺️ {{ ciudad }}
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="input-group fecha-group">
+            <label>Fecha de Salida</label>
+            <div class="input-wrapper">
+              <!-- AQUÍ ESTÁ EL CAMBIO IMPORTANTE: #fechaInput -->
+              <!-- Se coloca DENTRO del input, que a su vez está dentro del div input-wrapper -->
+              <input #fechaInput 
+                     type="date" 
+                     name="fecha" 
+                     [(ngModel)]="busqueda.fecha" 
+                     [min]="minDate" 
+                     required>
+            </div>
+            <!-- Botones rápidos de fecha -->
+            <div class="quick-dates">
+              <button type="button" (click)="seleccionarHoy()">Hoy</button>
+              <button type="button" (click)="seleccionarManana()">Mañana</button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-buscar">
+            BUSCAR PASAJES
+          </button>
+        </form>
+
+        <!-- Tooltip de error discreto -->
+        <div class="error-tooltip" *ngIf="errorBusqueda">
+          ⚠️ {{ errorBusqueda }}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================== -->
+  <!-- RESULTADOS DE BÚSQUEDA -->
+  <!-- ========================================== -->
+  <section class="results-section" id="resultados">
     
-    <!-- Animación de carga -->
-    <div class="loading" *ngIf="buscando">
-      <p>🔄 Buscando las mejores rutas...</p>
+    <!-- 1. SKELETON LOADERS (Animación de carga) -->
+    <div class="container-resultados" *ngIf="buscando">
+       <div class="skeleton-card" *ngFor="let item of [1,2,3]">
+         <div class="sk-left"></div>
+         <div class="sk-center"></div>
+         <div class="sk-right"></div>
+       </div>
     </div>
 
-    <!-- Mensaje de error si no hay buses -->
-    <div class="error-msg" *ngIf="mensajeSinResultados">
-      {{ mensajeSinResultados }}
+    <!-- 2. MENSAJE SIN RESULTADOS -->
+    <div class="no-results" *ngIf="mensajeSinResultados && !buscando">
+      <div class="empty-state-icon">🚌💨</div>
+      <h3>No encontramos viajes disponibles</h3>
+      <p>{{ mensajeSinResultados }}</p>
+      <button (click)="seleccionarManana()" class="btn-outline">Ver fecha siguiente</button>
     </div>
 
-    <!-- Lista de Tarjetas encontradas -->
-    <div class="lista-viajes" *ngIf="resultadosBusqueda.length > 0">
-      <h3>Viajes encontrados para el {{ busqueda.fecha }}:</h3>
-      
+    <!-- 3. LISTA DE VIAJES (Resultados Reales) -->
+    <div class="container-resultados" *ngIf="resultadosBusqueda.length > 0 && !buscando">
+      <div class="section-title">
+        <h3>Resultados disponibles</h3>
+        <span class="badge">{{ resultadosBusqueda.length }} opciones</span>
+      </div>
+
       <div class="viaje-card" *ngFor="let viaje of resultadosBusqueda">
-        <div class="viaje-info">
-          <span class="hora">{{ viaje.horaSalida }}</span>
-          <div class="ruta-resumen">
-            <strong>{{ viaje.rutaOrigen }} ➝ {{ viaje.rutaDestino }}</strong>
-            <small>{{ viaje.modelo }} - {{ viaje.tipoServicio }}</small>
+        
+        <!-- Columna Izquierda: Horario -->
+        <div class="col-time">
+          <div class="time-block">
+            <span class="hora-grande">{{ viaje.horaSalida }}</span>
+            <span class="lugar">Salida</span>
+          </div>
+          <div class="decoration-line"></div>
+        </div>
+
+        <!-- Columna Centro: Info Bus -->
+        <div class="col-info">
+          <div class="route-info">
+            <strong>{{ viaje.rutaOrigen }}</strong> 
+            <span class="arrow-icon">➝</span> 
+            <strong>{{ viaje.rutaDestino }}</strong>
+          </div>
+          <div class="bus-details">
+            <span class="badge-bus">{{ viaje.modelo }}</span>
+            <span class="service-type">{{ viaje.tipoServicio }}</span>
+          </div>
+          <div class="amenities">
+            <span title="Aire Acondicionado">❄️ A/C</span>
+            <span title="Asiento Reclinable">💺 Reclinable</span>
+            <span title="Cargadores USB">🔌 USB</span>
+            <span title="GPS Monitoreado">📡 GPS</span>
           </div>
         </div>
-        
-        <div class="viaje-precio">
-          <span class="precio">S/ {{ viaje.tarifaBase | number:'1.2-2' }}</span>
-          <!-- Botón inteligente: Lleva al mapa de asientos del ID real del bus -->
-          <button (click)="seleccionarViaje(viaje.id)">Elegir Asientos</button>
+
+        <!-- Columna Derecha: Precio y Acción -->
+        <div class="col-price">
+          <div class="price-tag">
+            <small>Precio por asiento</small>
+            <span class="amount">S/ {{ viaje.tarifaBase | number:'1.2-2' }}</span>
+          </div>
+          <button (click)="seleccionarViaje(viaje.id)" class="btn-select">
+            Elegir Asientos
+          </button>
         </div>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- SECCIÓN CARRUSEL -->
-  <section class="carrusel">
-    <button class="prev" (click)="prevSlide()">&#10094;</button>
-    <button class="next" (click)="nextSlide()">&#10095;</button>
-    
-    <div class="slides" [style.transform]="'translateX(-' + currentSlide * 100 + '%)'">
-      <div class="slide" *ngFor="let slide of slides; let i = index">
-        <img [src]="slide.url" [alt]="slide.alt">
+  <!-- ========================================== -->
+  <!-- SECCIÓN CARRUSEL (Promociones) -->
+  <!-- ========================================== -->
+  <section class="carrusel-section">
+    <div class="section-header">
+        <h2>Promociones Especiales</h2>
+    </div>
+    <div class="carrusel">
+      <button class="nav-btn prev" (click)="prevSlide()">❮</button>
+      
+      <div class="slides-wrapper">
+          <div class="slide" *ngFor="let slide of slides; let i = index" 
+               [class.active]="i === currentSlide"
+               [style.transform]="'translateX(' + (i - currentSlide) * 100 + '%)'">
+            <img [src]="slide.url" [alt]="slide.alt">
+            <div class="slide-caption">
+                <h3>{{ slide.alt }}</h3>
+            </div>
+          </div>
       </div>
+      
+      <button class="nav-btn next" (click)="nextSlide()">❯</button>
     </div>
     
     <div class="indicators">
-      <span 
-        *ngFor="let slide of slides; let i = index" 
-        [class.active]="i === currentSlide"
-        (click)="goToSlide(i)">
-      </span>
+       <span *ngFor="let slide of slides; let i = index" 
+             [class.active]="i === currentSlide"
+             (click)="goToSlide(i)"></span>
     </div>
   </section>
 
-  <!-- SECCIÓN DESTINOS -->
-  <section class="destinos">
-    <h2>Destinos destacados</h2>
+  <!-- ========================================== -->
+  <!-- SECCIÓN DESTINOS DESTACADOS -->
+  <!-- ========================================== -->
+  <section class="destinos section-padding">
+    <h2>Destinos más visitados</h2>
+    <p class="subtitle">Explora las rutas favoritas de nuestros viajeros</p>
+    
     <div class="grid-destinos">
-      <article class="card destination-card" *ngFor="let destino of destinosDestacados">
-        <img [src]="destino.imagenUrl" [alt]="destino.ruta">
-        <div class="info">
+      <article class="card-destino" *ngFor="let destino of destinosDestacados" (click)="comprarDestacado(destino)">
+        <div class="img-wrapper">
+            <img [src]="destino.imagenUrl" [alt]="destino.ruta">
+            <div class="overlay-hover">
+              <span>Ver Pasajes</span>
+            </div>
+        </div>
+        <div class="card-body">
           <h3>{{ destino.ruta }}</h3>
-          <button (click)="comprarDestacado(destino)" class="btn-primary">Comprar</button>
+          <span class="btn-text">Buscar ahora ➝</span>
         </div>
       </article>
     </div>
   </section>
 
+  <!-- ========================================== -->
   <!-- SECCIÓN SERVICIOS -->
-  <section class="servicios">
-    <h2>Nuestros servicios</h2>
+  <!-- ========================================== -->
+  <section class="servicios section-padding bg-white">
+    <h2>¿Por qué elegir Adventure?</h2>
     <div class="grid-servicios">
-      <article class="card service-card" *ngFor="let servicio of servicios">
-        <img [src]="servicio.imagenUrl" [alt]="servicio.descripcion">
-        <div class="info">
-          <p>{{ servicio.descripcion }}</p>
+      <article class="card-service" *ngFor="let servicio of servicios">
+        <div class="icon-wrapper">
+           <img [src]="servicio.imagenUrl" [alt]="servicio.descripcion">
         </div>
+        <p>{{ servicio.descripcion }}</p>
       </article>
     </div>
   </section>
+
 </main>
 
+<!-- ========================================== -->
+<!-- FOOTER -->
+<!-- ========================================== -->
 <footer>
-  <p>&copy; 2025 Adventure. Todos los derechos reservados.</p>
+  <div class="footer-content">
+      <div class="footer-logo">Adventure Bus</div>
+      <p>&copy; 2025 Adventure. Todos los derechos reservados.</p>
+  </div>
 </footer>
+
+<!-- ========================================== -->
+<!-- MODAL DE CONTACTO (Popup) -->
+<!-- ========================================== -->
+<div class="modal-overlay" *ngIf="showContactModal" (click)="closeContactModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <button class="close-btn" (click)="closeContactModal()">×</button>
+    
+    <div class="modal-header">
+      <h2>Contáctanos</h2>
+      <p>Estamos aquí para ayudarte en tu viaje</p>
+    </div>
+
+    <div class="modal-body">
+      <div class="contact-item">
+        <span class="icon">📞</span>
+        <div>
+          <strong>Central Telefónica</strong>
+          <p>(01) 555-0199</p>
+        </div>
+      </div>
+      
+      <div class="contact-item">
+        <span class="icon">💬</span>
+        <div>
+          <strong>WhatsApp</strong>
+          <p>+51 999 888 777</p>
+        </div>
+      </div>
+
+      <div class="contact-item">
+        <span class="icon">✉️</span>
+        <div>
+          <strong>Email</strong>
+          <p>atencion@adventurebus.com</p>
+        </div>
+      </div>
+
+      <div class="contact-item">
+        <span class="icon">🏢</span>
+        <div>
+          <strong>Oficina Principal</strong>
+          <p>Av. Javier Prado Este 1234, Lima</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-primary" (click)="closeContactModal()">Entendido</button>
+    </div>
+  </div>
+</div>

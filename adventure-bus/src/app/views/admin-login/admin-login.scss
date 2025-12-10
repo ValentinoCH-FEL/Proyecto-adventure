@@ -1,102 +1,214 @@
-$primary: #011638;
-$secondary: #0077b6;
-$accent: #fca311;
-$bg-light: #f4f7f6;
-$danger: #d32f2f;
+@use "sass:color";
 
-.login-container {
+// ==========================================
+// 1. VARIABLES (Mismo tema que la vista anterior)
+// ==========================================
+$primary: #0f172a;       // Slate 900
+$secondary: #0ea5e9;     // Sky 500 (Azul vibrante)
+$bg-page: #f8fafc;       // Slate 50
+$white: #ffffff;
+$danger: #ef4444;        // Red 500
+$gray-200: #e2e8f0;
+$gray-400: #94a3b8;
+$text-main: #334155;
+$shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+// ==========================================
+// 2. LAYOUT
+// ==========================================
+.login-page {
   min-height: 100vh;
-  background-color: $bg-light;
+  background-color: $bg-page;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 40px 20px;
-  font-family: 'Segoe UI', sans-serif;
+  padding: 20px;
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
 .login-card {
-  background: white;
-  padding: 40px;
-  border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+  background: $white;
   width: 100%;
-  max-width: 400px;
+  max-width: 420px; // Un ancho cómodo para lectura
+  padding: 48px 40px;
+  border-radius: 24px;
+  box-shadow: $shadow-lg;
+  border: 1px solid $white;
   text-align: center;
+  animation: fadeIn 0.5s ease-out;
 }
 
-.title {
-  color: $primary;
-  font-size: 1.8rem;
-  font-weight: 800;
-  margin-bottom: 5px;
+// ==========================================
+// 3. ENCABEZADO
+// ==========================================
+.card-header {
+  margin-bottom: 32px;
+
+  .icon-brand {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    display: inline-block;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+  }
+
+  .title {
+    color: $primary;
+    font-size: 1.75rem;
+    font-weight: 800;
+    margin: 0 0 8px;
+    letter-spacing: -0.5px;
+  }
+
+  .subtitle {
+    color: $gray-400;
+    font-size: 0.95rem;
+    margin: 0;
+    line-height: 1.5;
+  }
 }
 
-.subtitle {
-  color: #777;
-  margin-bottom: 30px;
-}
-
+// ==========================================
+// 4. FORMULARIO
+// ==========================================
 .form-group {
   text-align: left;
-  margin-bottom: 20px;
-  
+  margin-bottom: 24px;
+
   label {
     display: block;
     font-weight: 600;
-    color: #555;
+    color: $text-main;
     margin-bottom: 8px;
-    font-size: 0.95rem;
+    font-size: 0.875rem;
+    margin-left: 4px;
   }
   
-  input {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-size: 1rem;
-    
-    &:focus {
-      outline: none;
-      border-color: $secondary;
-      box-shadow: 0 0 0 3px rgba($secondary, 0.15);
+  // Wrapper para poner el icono dentro del input
+  .input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+
+    .input-icon {
+      position: absolute;
+      left: 16px;
+      font-size: 1.1rem;
+      z-index: 2;
+      opacity: 0.6;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 14px 16px 14px 48px; // 48px a la izq deja espacio al icono
+      border: 1px solid $gray-200;
+      border-radius: 12px;
+      font-size: 1rem;
+      color: $primary;
+      transition: all 0.2s ease;
+      background: $white;
+
+      &::placeholder {
+        color: $gray-400;
+        font-weight: 400;
+      }
+      
+      &:hover {
+        border-color: color.scale($gray-200, $lightness: -10%);
+      }
+
+      &:focus {
+        outline: none;
+        border-color: $secondary;
+        box-shadow: 0 0 0 4px rgba($secondary, 0.15); // Anillo de luz
+      }
     }
   }
 }
 
-.error-box {
-  background: #f8d7da;
-  color: $danger;
-  padding: 10px;
-  border-radius: 4px;
-  margin-bottom: 20px;
-  border: 1px solid $danger;
+// ==========================================
+// 5. ALERTAS Y BOTONES
+// ==========================================
+.alert-box {
+  background: #fef2f2;
+  color: #991b1b;
+  padding: 12px 16px;
+  border-radius: 10px;
+  margin-bottom: 24px;
   font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #fee2e2;
+  text-align: left;
 }
 
-.btn-login {
-  background: $accent;
-  color: $primary;
-  padding: 14px;
+.btn-primary {
+  background: $secondary;
+  color: $white;
+  padding: 16px;
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   width: 100%;
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
-  transition: background 0.3s;
-  
-  &:hover:not(:disabled) { background: darken($accent, 10%); }
-  &:disabled { background: #ccc; cursor: not-allowed; }
+  transition: all 0.3s;
+  box-shadow: 0 4px 6px rgba($secondary, 0.25);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  &:hover:not(:disabled) { 
+    background: color.scale($secondary, $lightness: -5%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba($secondary, 0.35);
+  }
+
+  &:disabled { 
+    background: $gray-200; 
+    color: $gray-400;
+    cursor: not-allowed; 
+    box-shadow: none;
+  }
+}
+
+// Estilo del Spinner de carga
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.card-footer {
+  margin-top: 32px;
 }
 
 .btn-back {
   background: none;
   border: none;
-  color: $secondary;
+  color: $gray-400;
   font-size: 0.9rem;
-  margin-top: 15px;
+  font-weight: 500;
   cursor: pointer;
-  text-decoration: underline;
+  text-decoration: none;
+  transition: color 0.2s;
   
-  &:hover { color: darken($secondary, 10%); }
+  &:hover { 
+    color: $secondary; 
+    text-decoration: underline;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }

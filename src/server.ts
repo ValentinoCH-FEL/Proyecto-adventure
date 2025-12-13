@@ -1,19 +1,21 @@
 import "reflect-metadata";
 import { AppDataSource } from "./database/data-source";
-import app from "./app"; 
+import app from "./app"; // Importamos la aplicación Express definida en app.ts
 // IMPORTAMOS LA FUNCIÓN PARA CREAR EL ADMIN
 import { setupAdminUser } from './database/initialSetup'; 
 
-// conexión a la base de datos
+const PORT = 3000;
+
+// --- CONEXIÓN A LA BASE DE DATOS E INICIO DEL SERVIDOR ---
 AppDataSource.initialize()
-  .then(async () => { // <--- CLAVE: Agregamos 'async' aquí
+  .then(async () => {
     console.log("📌 Conectado a la base de datos MySQL");
     
     // LLAMAMOS A LA FUNCIÓN DE CONFIGURACIÓN
     await setupAdminUser(); // Esto crea el usuario 'ADMIN' con la contraseña encriptada.
     
-    app.listen(3000, () => {
-      console.log("🚀 Servidor corriendo en http://localhost:3000");
+    app.listen(PORT, () => {
+      console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
     });
   })
   .catch((error) => console.error("❌ Error de conexión:", error));
